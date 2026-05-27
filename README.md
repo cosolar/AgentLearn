@@ -36,7 +36,7 @@
 
 > **打造你的第一个 AI Agent，从认知到生产，一步到位。**
 >
-> 🌐 **国内访问**：[https://agentlearn.minims.cn](https://agentlearn.minims.cn)
+> 🌐 **国内访问**：[https://al.towao.com](https://al.towao.com)
 
 AgentLearn 是当前最系统的开源 AI Agent 教程之一，专为 **2026 年技术栈** 打造。无论你是 AI 新手还是资深后端开发者，都可以在这里找到适合自己的成长路径。
 
