@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>AgentLearn - AI Agent 教程</title>
+  <meta name="description" content="AI Agent 从零开始构建智能体 — 全面、系统的开源学习教程">
+
+  <!-- Docsify (pure 主题，无预设绿色) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@4/lib/themes/pure.css">
+  <link rel="preconnect" href="//fonts.googleapis.com">
+  <link rel="preconnect" href="//fonts.gstatic.com" crossorigin>
+
+  <!-- 代码高亮主题 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1/themes/prism-tomorrow.css">
+
+  <!-- 自定义样式 -->
+  <style>
+    :root {
+      --theme-color: #7c3aed;
+      --sidebar-width: 280px;
+    }
+
+    /* ========== 侧边栏 ========== */
+    .sidebar {
+      background: #f8f9fa;
+    }
+
+    .sidebar ul li a {
+      font-size: 15px;
+      font-family: 'Inter', 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+      letter-spacing: 0.02em;
+      padding: 0.55em 1.5em;
+      text-decoration: none;
+    }
+
+    .sidebar ul li a:hover {
+      color: var(--theme-color);
+    }
+
+    .sidebar-nav ul ul {
+      padding-left: 1em;
+    }
+
+    .sidebar-nav ul ul li a {
+      font-size: 14px;
+      font-family: 'Inter', 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+      letter-spacing: 0.01em;
+      padding: 0.35em 1.5em;
+      color: #555;
+    }
+    
+    .sidebar-nav ul ul ul li a {
+      font-size: 13.5px;
+    }
+
+    .sidebar-nav > ul > li > a {
+      font-weight: 600;
+      color: #333;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav > ul > li > a:hover,
+    .sidebar-nav > ul > li.active > a {
+      border-left-color: var(--theme-color);
+      color: var(--theme-color);
+    }
+
+    /* 选中项高亮 — 背景 + 加粗 */
+    .sidebar-nav ul li.active > a {
+      background: linear-gradient(90deg, rgba(124, 58, 237, 0.08) 0%, transparent 90%);
+      color: var(--theme-color);
+      font-weight: 600;
+      border-left: 3px solid var(--theme-color);
+    }
+
+    .markdown-section h1 {
+      font-size: 1.8em;
+      margin-top: 1.5em;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 0.3em;
+    }
+
+    .markdown-section h2 {
+      font-size: 1.4em;
+      border-bottom: 1px solid #f0f0f0;
+      padding-bottom: 0.2em;
+    }
+
+    .markdown-section table {
+      display: table;
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .markdown-section th,
+    .markdown-section td {
+      padding: 0.6em 1em;
+      border: 1px solid #e0e0e0;
+    }
+
+    .markdown-section code {
+      background: #f5f5f5;
+      color: #d63384;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+
+    .markdown-section pre {
+      background: #1d1f2b;
+      border-radius: 10px;
+      padding: 2.4em 1.2em 1.2em;
+      border: 1px solid #2a2d3a;
+      overflow-x: auto;
+      position: relative;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', Consolas, monospace;
+    }
+
+    /* macOS 红黄绿三色圆点 */
+    .markdown-section pre::before {
+      content: '';
+      position: absolute;
+      top: 13px;
+      left: 14px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ff5f56;
+      box-shadow: 18px 0 #ffbd2e, 36px 0 #27c93f;
+      pointer-events: none;
+    }
+
+    .markdown-section pre code {
+      background: none;
+      color: #cdd6f4;
+      padding: 0;
+      border-radius: 0;
+      font-size: 0.92em;
+      line-height: 1.7;
+      font-family: inherit;
+    }
+
+    /* ========== Prism 语法高亮颜色 (内联, 无需外部 CSS) ========== */
+    .token.comment,
+    .token.prolog,
+    .token.doctype,
+    .token.cdata {
+      color: #6c7086;
+    }
+    .token.punctuation {
+      color: #9399b2;
+    }
+    .token.property,
+    .token.tag,
+    .token.boolean,
+    .token.number,
+    .token.constant,
+    .token.symbol {
+      color: #fab387;
+    }
+    .token.selector,
+    .token.attr-name,
+    .token.string,
+    .token.char,
+    .token.builtin {
+      color: #a6e3a1;
+    }
+    .token.operator,
+    .token.entity,
+    .token.url {
+      color: #94e2d5;
+    }
+    .token.atrule,
+    .token.attr-value,
+    .token.keyword {
+      color: #cba6f7;
+    }
+    .token.function,
+    .token.class-name {
+      color: #89b4fa;
+    }
+    .token.regex,
+    .token.important,
+    .token.variable {
+      color: #f9e2af;
+    }
+    .token.bold { font-weight: bold; }
+    .token.italic { font-style: italic; }
+    .token.entity { cursor: help; }
+
+    /* 复制按钮 — Xcode 风格 */
+    .docsify-copy-code-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255,255,255,0.08);
+      color: #a0a8c0;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-family: 'SF Mono', 'Inter', -apple-system, sans-serif;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s, background 0.2s;
+      z-index: 2;
+      backdrop-filter: blur(4px);
+    }
+    .markdown-section pre:hover .docsify-copy-code-button {
+      opacity: 1;
+    }
+    .docsify-copy-code-button:hover {
+      background: rgba(255,255,255,0.15);
+      color: #e0e4f0;
+    }
+    .docsify-copy-code-button:active {
+      transform: scale(0.95);
+    }
+    .docsify-copy-code-button span svg {
+      display: none;
+    }
+
+    /* ========== 封面样式 ========== */
+    /* 封面 - 全宽自适应 */
+    .cover {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      width: 100vw;
+      max-width: none;
+      margin-left: calc(-50vw + 50%);
+      text-align: center;
+      /*background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1a1a2e);*/
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+      color: white;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 覆盖 docsify 默认给 <section.cover.show> 的内联背景 */
+    .cover.show {
+      background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1a1a2e) !important;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* 光晕效果 */
+    .cover::before {
+      content: '';
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+      top: -150px;
+      right: -150px;
+      pointer-events: none;
+    }
+
+    .cover::after {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(236, 72, 153, 0.1) 0%, transparent 70%);
+      bottom: -100px;
+      left: -100px;
+      pointer-events: none;
+    }
+
+    /* 粒子 */
+    .cover-particles {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .cover-particles span {
+      position: absolute;
+      display: block;
+      width: 4px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      animation: float 20s infinite;
+    }
+
+    .cover-particles span:nth-child(1) { left: 10%; top: 20%; animation-delay: 0s; width: 3px; height: 3px; }
+    .cover-particles span:nth-child(2) { left: 20%; top: 60%; animation-delay: 2s; width: 5px; height: 5px; }
+    .cover-particles span:nth-child(3) { left: 40%; top: 10%; animation-delay: 4s; width: 3px; height: 3px; }
+    .cover-particles span:nth-child(4) { left: 60%; top: 70%; animation-delay: 6s; width: 6px; height: 6px; opacity: 0.2; }
+    .cover-particles span:nth-child(5) { left: 80%; top: 30%; animation-delay: 8s; width: 4px; height: 4px; }
+    .cover-particles span:nth-child(6) { left: 15%; top: 80%; animation-delay: 3s; width: 3px; height: 3px; }
+    .cover-particles span:nth-child(7) { left: 50%; top: 40%; animation-delay: 5s; width: 5px; height: 5px; opacity: 0.25; }
+    .cover-particles span:nth-child(8) { left: 70%; top: 15%; animation-delay: 7s; width: 3px; height: 3px; }
+    .cover-particles span:nth-child(9) { left: 90%; top: 55%; animation-delay: 9s; width: 4px; height: 4px; }
+    .cover-particles span:nth-child(10) { left: 35%; top: 90%; animation-delay: 1s; width: 6px; height: 6px; opacity: 0.15; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+      25% { transform: translateY(-30px) scale(1.2); opacity: 0.6; }
+      50% { transform: translateY(-60px) scale(0.8); opacity: 0.2; }
+      75% { transform: translateY(-20px) scale(1.1); opacity: 0.5; }
+    }
+
+    /* Logo */
+    .cover-logo {
+      font-size: 5em;
+      margin-bottom: 0.2em;
+      animation: logoBounce 2s ease-in-out infinite;
+      filter: drop-shadow(0 0 30px rgba(99, 102, 241, 0.4));
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes logoBounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-8px) scale(1.05); }
+    }
+
+    /* 标题 */
+    .cover h1.cover-title {
+      font-size: 4.2em;
+      margin: 0;
+      color: white;
+      border: none;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 2px 20px rgba(99, 102, 241, 0.3));
+      position: relative;
+      z-index: 1;
+    }
+
+    /* 副标题 */
+    .cover p.cover-subtitle {
+      font-size: 1.4em;
+      opacity: 0.95;
+      max-width: 600px;
+      margin: 0.8em auto;
+      color: #c7d2fe;
+      font-weight: 400;
+      letter-spacing: 0.3em;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cover .highlight-text {
+      background: linear-gradient(90deg, #818cf8, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 600;
+    }
+
+    /* 描述 */
+    .cover p.cover-desc {
+      font-size: 1.1em;
+      color: rgba(255, 255, 255, 0.7);
+      max-width: 500px;
+      margin: 0.5em auto 1.5em;
+      letter-spacing: 0.15em;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* 统计数据 */
+    .cover-stats {
+      display: flex;
+      align-items: center;
+      gap: 2em;
+      margin: 1.5em 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .stat-num {
+      font-size: 2.4em;
+      font-weight: 800;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+    }
+
+    .stat-label {
+      font-size: 0.85em;
+      color: rgba(255, 255, 255, 0.6);
+      letter-spacing: 0.1em;
+      margin-top: 0.2em;
+    }
+
+    .stat-divider {
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.3), transparent);
+    }
+
+    /* 徽章 */
+    .cover .cover-badge {
+      margin: 1em 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cover .cover-badge img {
+      margin: 0 4px;
+      transition: transform 0.3s ease, filter 0.3s ease;
+    }
+
+    .cover .cover-badge img:hover {
+      transform: translateY(-2px) scale(1.08);
+      filter: brightness(1.2);
+    }
+
+    .cover a {
+      color: white;
+      text-decoration: none;
+    }
+
+    /* 按钮 */
+    .cover-actions {
+      display: flex;
+      gap: 1.2em;
+      margin: 1.8em 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      padding: 0.9em 2.4em;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white !important;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 1.05em;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+      text-decoration: none !important;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 8px 35px rgba(99, 102, 241, 0.55);
+    }
+
+    .btn-secondary {
+      display: inline-block;
+      padding: 0.9em 2em;
+      background: rgba(255, 255, 255, 0.08);
+      color: white !important;
+      border-radius: 50px;
+      font-weight: 500;
+      font-size: 1.05em;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(4px);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      text-decoration: none !important;
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-3px);
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.35);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    /* 滚动提示 */
+    .cover-scroll {
+      position: absolute;
+      bottom: 2.5em;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5em;
+      opacity: 0.5;
+      animation: scrollPulse 2.5s ease-in-out infinite;
+      z-index: 1;
+    }
+
+    @keyframes scrollPulse {
+      0%, 100% { opacity: 0.35; }
+      50% { opacity: 0.7; }
+    }
+
+    .cover-scroll span {
+      font-size: 0.8em;
+      letter-spacing: 0.2em;
+    }
+
+    .scroll-arrow {
+      width: 20px;
+      height: 20px;
+      border-right: 2px solid rgba(255,255,255,0.6);
+      border-bottom: 2px solid rgba(255,255,255,0.6);
+      transform: rotate(45deg);
+      animation: arrowBounce 1.8s ease infinite;
+    }
+
+    @keyframes arrowBounce {
+      0%, 100% { transform: rotate(45deg) translate(0, 0); }
+      50% { transform: rotate(45deg) translate(4px, 4px); }
+    }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 240px;
+      }
+      .cover h1.cover-title {
+        font-size: 2.5em;
+      }
+      .cover p.cover-subtitle {
+        font-size: 1.1em;
+        letter-spacing: 0.15em;
+      }
+      .cover-logo {
+        font-size: 3.5em;
+      }
+      .stat-num {
+        font-size: 1.8em;
+      }
+      .cover-actions {
+        flex-direction: column;
+        gap: 0.8em;
+      }
+      .btn-primary,
+      .btn-secondary {
+        padding: 0.8em 1.8em;
+        font-size: 0.95em;
+      }
+    }
+
+    /* 移除分页导航的上边框（---） */
+    .docsify-pagination-container {
+      border-top: none;
+    }
+
+    /* ========== 文章右侧目录（TOC） — 可折叠、自动滚动 ========== */
+    .page_toc {
+      position: fixed;
+      right: 28px;
+      top: 96px;
+      width: 210px;
+      max-height: calc(100vh - 160px);
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 14px 14px 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      z-index: 50;
+      transition: width 0.25s ease, padding 0.25s ease, border-color 0.25s ease, opacity 0.25s ease;
+      overflow: hidden;           /* 内容滚动由内部容器处理 */
+    }
+    /* 折叠状态 */
+    .page_toc.collapsed {
+      width: 36px;
+      padding: 10px 8px;
+      border-color: transparent;
+      opacity: 0.7;
+      cursor: pointer;
+    }
+    .page_toc.collapsed:hover {
+      opacity: 1;
+      border-color: #d1d5db;
+    }
+    .page_toc.collapsed .toc-content,
+    .page_toc.collapsed ul {
+      display: none;
+    }
+    .page_toc.collapsed p.title {
+      margin: 0;
+      writing-mode: vertical-rl;  /* 竖排文字节省宽度 */
+      font-size: 12px;
+      gap: 0;
+    }
+    .page_toc.collapsed .toc-toggle {
+      border: none;
+      background: transparent;
+      padding: 1px;
+      font-size: 15px;
+      color: #9ca3af;
+    }
+    .page_toc.collapsed .toc-toggle:hover {
+      background: transparent;
+      color: #4f46e5;
+    }
+    .page_toc.collapsed .toc-toggle .toc-label {
+      display: none;
+    }
+
+    /* TOC 标题 */
+    .page_toc p.title {
+      margin: 0 0 8px 0;
+      padding: 0;
+      font-weight: 600;
+      font-size: 13px;
+      color: #374151;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    /* 折叠按钮 */
+    .toc-toggle {
+      cursor: pointer;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      font-size: 13px;
+      color: #6b7280;
+      padding: 0 8px;
+      line-height: 1.6;
+      border-radius: 100px;
+      transition: all 0.15s;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-family: inherit;
+    }
+    .toc-toggle:hover {
+      color: #4f46e5;
+      background: #f5f3ff;
+      border-color: #c7d2fe;
+    }
+    .toc-toggle .toc-label {
+      font-size: 11px;
+      opacity: 0.75;
+    }
+
+    /* 内容滚动容器 */
+    .page_toc .toc-content {
+      max-height: calc(100vh - 240px);
+      overflow-y: auto;
+      scroll-behavior: smooth;
+      margin-right: -6px;         /* 为滚动条预留空间 */
+      padding-right: 6px;
+    }
+    /* 滚动条美化 */
+    .page_toc .toc-content::-webkit-scrollbar {
+      width: 4px;
+    }
+    .page_toc .toc-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .page_toc .toc-content::-webkit-scrollbar-thumb {
+      background: #d1d5db;
+      border-radius: 2px;
+    }
+
+    /* 链接列表 */
+    .page_toc ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .page_toc ul a {
+      display: block;
+      padding: 3px 0 3px 10px;
+      color: #6b7280;
+      text-decoration: none;
+      font-weight: 400;
+      font-size: 13px;
+      line-height: 1.7;
+      border-left: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+      border-radius: 0 4px 4px 0;
+    }
+    .page_toc ul a:hover {
+      color: #4f46e5;
+      background: #f9fafb;
+    }
+    .page_toc ul a.active {
+      color: #4f46e5;
+      border-left-color: #4f46e5;
+      font-weight: 500;
+      background: #eef2ff;
+    }
+    .page_toc .toc-link-h2 { padding-left: 10px; }
+    .page_toc .toc-link-h3 { padding-left: 24px; font-size: 12.5px; }
+    .page_toc .toc-link-h4 { padding-left: 38px; font-size: 12px; }
+
+    /* 窄屏隐藏 */
+    @media (max-width: 1300px) {
+      .page_toc { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <!-- 插件: 复制代码 — 必须在 config 之前加载 -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code@2/dist/docsify-copy-code.min.js"></script>
+
+  <script>
+    window.$docsify = Object.assign(window.$docsify || {}, {
+      // 基础配置
+      name: '🤖 AgentLearn',
+      repo: 'https://gitcode.com/mininote/AgentLearn',
+      basePath: '/',
+
+      // 侧边栏
+      loadSidebar: true,
+      subMaxLevel: 0,    // 侧边栏不显示文章内部标题
+      autoHeader: true,
+
+      // 导航栏
+      loadNavbar: false,
+
+      // 封面
+      coverpage: true,
+
+      // 默认主题
+      themeColor: '#4f46e5',
+
+      // 代码高亮由下方 Prism 组件脚本自动处理
+
+      // 全文搜索
+      search: {
+        maxAge: 86400000,
+        paths: 'auto',
+        placeholder: '搜索文档...',
+        noData: '找不到结果',
+        depth: 3,
+      },
+
+      // 页面加载完成后
+      formatUpdated: '{YYYY}-{MM}-{DD}',
+
+      // 分页导航（上一章/下一章）
+      pagination: {
+        previousText: '上一章',
+        nextText: '下一章',
+      },
+
+      // 文章右侧目录（TOC）
+      toc: {
+        scope: '.markdown-section',
+        headings: 'h1, h2, h3, h4',
+        title: '目录',
+      },
+
+      // TOC 增强插件：折叠 + 自动滚动
+      plugins: [
+        function(hook, vm) {
+          var tocObserver = null;
+
+          hook.doneEach(function() {
+            // 封面页不显示右侧目录
+            if (vm.route.path === '' || vm.route.path === '/' || vm.route.path === '#/') {
+              var toc = document.querySelector('.page_toc');
+              if (toc) { toc.style.display = 'none'; }
+              return;
+            }
+            enhanceTOC();
+          });
+
+          function enhanceTOC() {
+            var toc = document.querySelector('.page_toc');
+            if (!toc) return;
+
+            addToggleButton(toc);
+            wrapContent(toc);
+            setupActiveTracking(toc);
+          }
+
+          function addToggleButton(toc) {
+            var title = toc.querySelector('p.title');
+            if (!title || title.querySelector('.toc-toggle')) return;
+
+            var btn = document.createElement('button');
+            btn.className = 'toc-toggle';
+            setBtnState(btn, false);
+            btn.title = '\u6298\u53E0\u76EE\u5F55';
+            btn.onclick = function(e) {
+              e.stopPropagation();
+              toggle(toc, btn);
+            };
+            // 仅点击标题空白区也切换
+            title.onclick = function(e) {
+              if (e.target === title) toggle(toc, btn);
+            };
+
+            // 恢复折叠状态
+            try {
+              if (localStorage.getItem('toc-collapsed') === 'true') {
+                toc.classList.add('collapsed');
+                setBtnState(btn, true);
+                btn.title = '\u5C55\u5F00\u76EE\u5F55';
+              }
+            } catch(e) {}
+
+            title.appendChild(btn);
+          }
+
+          function setBtnState(btn, collapsed) {
+            btn.innerHTML = collapsed
+              ? '+ <span class="toc-label">\u5C55\u5F00</span>'
+              : '\u2212 <span class="toc-label">\u6536\u8D77</span>';
+          }
+
+          function toggle(toc, btn) {
+            var collapsed = toc.classList.toggle('collapsed');
+            setBtnState(btn, collapsed);
+            btn.title = collapsed ? '\u5C55\u5F00\u76EE\u5F55' : '\u6298\u53E0\u76EE\u5F55';
+            try { localStorage.setItem('toc-collapsed', collapsed); } catch(e) {}
+          }
+
+          function wrapContent(toc) {
+            if (toc.querySelector('.toc-content')) return;
+            var ul = toc.querySelector('ul');
+            if (!ul) return;
+            var content = document.createElement('div');
+            content.className = 'toc-content';
+            ul.parentNode.insertBefore(content, ul);
+            content.appendChild(ul);
+          }
+
+          function setupActiveTracking(toc) {
+            if (tocObserver) { tocObserver.disconnect(); tocObserver = null; }
+
+            var content = toc.querySelector('.toc-content');
+            var ul = toc.querySelector('ul');
+            // 如果 ul 还没生成，延迟重试
+            if (!ul || !ul.querySelector('a')) {
+              setTimeout(function() { setupActiveTracking(toc); }, 200);
+              return;
+            }
+
+            var links = ul.querySelectorAll('a');
+            var items = [];
+
+            links.forEach(function(link) {
+              var href = link.getAttribute('href');
+              if (href && href.charAt(0) === '#') {
+                var el = document.getElementById(href.slice(1));
+                if (el) items.push({ el: el, link: link });
+              }
+            });
+
+            if (items.length === 0) return;
+            if (typeof IntersectionObserver === 'undefined') return;
+
+            // 标准 scroll-spy：只在顶部 180px 带状区域检测
+            // 当文章滚动，每个节点进入这个区域时激活，滚动到下一个时自动切换
+            tocObserver = new IntersectionObserver(function(entries) {
+              // 收集所有进入（intersecting）的条目，取最上面那个
+              var entering = [];
+              entries.forEach(function(entry) {
+                if (entry.isIntersecting) entering.push(entry);
+              });
+              if (entering.length === 0) return;
+
+              // 取最靠近顶部的（即 boundingClientRect.top 最小的那个，越靠上越小）
+              entering.sort(function(a, b) { return a.boundingClientRect.top - b.boundingClientRect.top; });
+              var target = entering[0].target;
+
+              // 移除所有 active
+              items.forEach(function(item) { item.link.classList.remove('active'); });
+              // 设置当前 active
+              for (var i = 0; i < items.length; i++) {
+                if (items[i].el === target) {
+                  items[i].link.classList.add('active');
+                  // 自动滚动 TOC，让 active 项可见
+                  if (content) {
+                    var linkTop = items[i].link.offsetTop - content.offsetTop - content.clientHeight / 2 + 20;
+                    content.scrollTop = Math.max(0, linkTop);
+                  }
+                  break;
+                }
+              }
+            }, { threshold: 0, rootMargin: '-64px 0px -75% 0px' });
+
+            items.forEach(function(item) {
+              tocObserver.observe(item.el);
+            });
+          }
+        }
+      ],
+    });
+  </script>
+
+  <!-- Docsify 核心 -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/docsify.min.js"></script>
+
+  <!-- 插件: 右侧目录（TOC） -->
+  <script src="https://unpkg.com/docsify-toc@1.0.0/dist/toc.js"></script>
+
+  <!-- 插件: 搜索 -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
+
+  <!-- 插件: 图片缩放 -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify-zoom-image@1/dist/docsify-zoom-image.min.js"></script>
+
+  <!-- Prism 语法高亮 -->
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-python.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-json.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-yaml.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-go.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-docker.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-markdown.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-powershell.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-javascript.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-typescript.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-css.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-sql.min.js"></script>
+
+  <!-- 语言别名映射 -->
+  <script>
+    (function() {
+      if (typeof Prism === 'undefined') return;
+      var map = {
+        'py': 'python',
+        'sh': 'bash',
+        'shell': 'bash',
+        'cmd': 'bash',
+        'ps': 'powershell',
+        'js': 'javascript',
+        'ts': 'typescript',
+      };
+      for (var alias in map) {
+        var target = map[alias];
+        if (Prism.languages[target] && !Prism.languages[alias]) {
+          Prism.languages[alias] = Prism.languages[target];
+        }
+      }
+    })();
+  </script>
+
+  <!-- 插件: 分页导航（上一章/下一章） -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify-pagination@2/dist/docsify-pagination.min.js"></script>
+
+</body>
+</html>

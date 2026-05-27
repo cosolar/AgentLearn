@@ -1,0 +1,119 @@
+[project]
+name = "agentlearn"
+version = "1.0.0"
+description = "AI Agent 从零开始构建智能体 - 全面学习教程"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "AgentLearn Team", email = "team@agentlearn.dev"}
+]
+keywords = ["ai", "agent", "langchain", "langgraph", "tutorial", "llm"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    # LangChain 核心 (2025 最新 1.x)
+    "langchain>=1.3.1",
+    "langchain-core>=1.4.0",
+    "langchain-community>=1.3.0",
+    
+    # LangChain 模型集成
+    "langchain-openai>=1.2.2",
+    "langchain-anthropic>=1.0.0",
+    "langchain-google-genai>=2.0.0",
+    "langchain-ollama>=1.0.0",
+    
+    # LangGraph (2025 最新)
+    "langgraph>=1.2.1",
+    "langgraph-checkpoint>=4.1.1",
+    "langgraph-sdk>=0.3.15",
+    
+    # 向量数据库
+    "chromadb>=1.5.9",
+    "faiss-cpu>=1.14.2",
+    "qdrant-client>=1.13.0",
+    
+    # 嵌入模型
+    "langchain-huggingface>=1.2.2",
+    "sentence-transformers>=5.5.1",
+    "huggingface-hub>=1.16.1",
+    
+    # 数据处理
+    "beautifulsoup4>=4.13.0",
+    "markdown>=3.8.0",
+    "pypdf>=5.0.0",
+    "python-docx>=1.2.0",
+    "tiktoken>=0.9.0",
+    
+    # Web 框架
+    "fastapi>=0.115.0",
+    "uvicorn>=0.34.0",
+    "pydantic>=2.11.0",
+    "pydantic-settings>=2.8.0",
+    
+    # 工具
+    "python-dotenv>=1.1.0",
+    "httpx>=0.28.0",
+    # 测试
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.25.0",
+    "pytest-cov>=6.0.0",
+    # 评估工具
+    "ragas>=0.2.0",
+    "streamlit>=1.57.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=25.1.0",
+    "ruff>=0.9.0",
+    "mypy>=1.15.0",
+    "pre-commit>=4.1.0",
+]
+all = [
+    "agentlearn[dev]",
+]
+
+[project.urls]
+Homepage = "https://gitcode.com/mininote/AgentLearn"
+Documentation = "https://gitcode.com/mininote/AgentLearn#readme"
+Repository = "https://gitcode.com/mininote/AgentLearn.git"
+Issues = "https://gitcode.com/mininote/AgentLearn/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agentlearn"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[[tool.uv.index]]
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
