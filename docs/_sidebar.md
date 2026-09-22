@@ -6,13 +6,13 @@
   * [1.3 第一个 Agent](01-intro/03-first-agent.md)
 
 * 🔵 **第二部分：核心概念**
-  * [2.1 Prompt 工程基础](02-fundamentals/01-prompt-engineering.md)
+  * [2.1 Prompt 工程与上下文工程](02-fundamentals/01-prompt-engineering.md)
   * [2.2 Chain 模式详解](02-fundamentals/02-chain-pattern.md)
   * [2.3 Agent 核心架构](02-fundamentals/03-agent-architecture.md)
   * [2.4 记忆机制](02-fundamentals/04-memory.md)
 
-* 🟠 **第三部分：LangChain 实战**
-  * [3.1 LangChain 核心组件](03-langchain/01-core-components.md)
+* 🟠 **第三部分：LangChain v1 实战**
+  * [3.1 LangChain v1 核心组件](03-langchain/01-core-components.md)
   * [3.2 模型调用与工具集成](03-langchain/02-models-and-tools.md)
   * [3.3 向量存储与检索](03-langchain/03-vector-store.md)
   * [3.4 构建聊天 Agent](03-langchain/04-chat-agent.md)
@@ -41,20 +41,23 @@
 * ⚫ **第七部分：生产部署**
   * [7.1 API 服务部署](07-deployment/01-api-service.md)
   * [7.2 Docker 容器化](07-deployment/02-docker.md)
-  * [7.3 监控与日志](07-deployment/03-monitoring.md)
+  * [7.3 可观测性、监控与日志](07-deployment/03-monitoring.md)
   * [7.4 CI/CD 流水线](07-deployment/04-cicd.md)
 
 * 🌟 **第八部分：生态全景**
   * 📊 **生态调研**
-    * [8.1.1 核心框架对比](08-ecosystem/survey/01-core-frameworks.md)
-    * [8.1.2 多 Agent 模式](08-ecosystem/survey/02-multi-agent-patterns.md)
-    * [8.1.3 工具生态](08-ecosystem/survey/03-tool-ecosystem.md)
-    * [8.1.4 记忆系统对比](08-ecosystem/survey/04-memory-systems.md)
-    * [8.1.5 低代码平台](08-ecosystem/survey/05-low-code-platforms.md)
-    * [8.1.6 领域专属 Agent](08-ecosystem/survey/06-domain-agents.md)
-    * [8.1.7 评估工具](08-ecosystem/survey/07-evaluation-tools.md)
-    * [8.1.8 安全沙箱](08-ecosystem/survey/08-security-sandbox.md)
-    * [8.1.9 技术选型指南](08-ecosystem/survey/09-selection-guide.md)
+    * [8.1 核心框架对比](08-ecosystem/survey/01-core-frameworks.md)
+    * [8.2 多 Agent 模式](08-ecosystem/survey/02-multi-agent-patterns.md)
+    * [8.3 工具生态](08-ecosystem/survey/03-tool-ecosystem.md)
+    * [8.4 记忆系统对比](08-ecosystem/survey/04-memory-systems.md)
+    * [8.5 低代码平台](08-ecosystem/survey/05-low-code-platforms.md)
+    * [8.6 领域专属 Agent](08-ecosystem/survey/06-domain-agents.md)
+    * [8.7 评估工具](08-ecosystem/survey/07-evaluation-tools.md)
+    * [8.8 安全沙箱](08-ecosystem/survey/08-security-sandbox.md)
+    * [8.9 技术选型指南](08-ecosystem/survey/09-selection-guide.md)
+  * 🔌 **协议标准**
+    * [8.10 MCP 协议完全指南](08-ecosystem/protocols/01-mcp.md)
+    * [8.11 A2A 协议与互操作](08-ecosystem/protocols/02-a2a.md)
   * 📦 **HiClaw 实践**
     * [HiClaw 教程](08-ecosystem/hiclaw/README.md)
     * [8.2.1 快速开始](08-ecosystem/hiclaw/quickstart.md)

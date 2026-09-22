@@ -35,7 +35,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 # 创建模型实例
 llm = ChatOpenAI(
-    model="gpt-4o",         # 模型名称
+    model="gpt-5.5",         # 模型名称
     temperature=0.7,         # 创造度（0-2）
     max_tokens=1000,         # 最大输出 token
     timeout=30,              # 超时秒数
@@ -69,7 +69,7 @@ for chunk in llm.stream("请写一段关于 AI Agent 的介绍，字数 200 字�
 import asyncio
 
 async def async_demo():
-    llm = ChatOpenAI(model="gpt-4o-mini")
+    llm = ChatOpenAI(model="gpt-5.5-mini")
     
     # 异步调用
     response = await llm.ainvoke("推荐三本 Python 入门书籍")
@@ -78,7 +78,7 @@ async def async_demo():
 
 # 批量异步调用
 async def batch_demo():
-    llm = ChatOpenAI(model="gpt-4o-mini")
+    llm = ChatOpenAI(model="gpt-5.5-mini")
     
     questions = [
         "Python 是什么？",
@@ -99,7 +99,7 @@ async def batch_demo():
 
 ```python
 # 批量调用（同一次请求处理多条，OpenAI 支持）
-llm = ChatOpenAI(model="gpt-4o-mini")
+llm = ChatOpenAI(model="gpt-5.5-mini")
 
 batch_messages = [
     [HumanMessage(content="解释一下 Python 的 list")],
@@ -122,19 +122,19 @@ LangChain 支持超过 100 种模型，接口完全一致：
 ```python
 # === OpenAI ===
 from langchain_openai import ChatOpenAI
-openai_llm = ChatOpenAI(model="gpt-4o")
+openai_llm = ChatOpenAI(model="gpt-5.5")
 
 # === Anthropic (Claude) ===
 from langchain_anthropic import ChatAnthropic
-claude_llm = ChatAnthropic(model="claude-3-sonnet-20240229")
+claude_llm = ChatAnthropic(model="claude-sonnet-4-6")
 
 # === Google (Gemini) ===
 from langchain_google_genai import ChatGoogleGenerativeAI
-gemini_llm = ChatGoogleGenerativeAI(model="gemini-pro")
+gemini_llm = ChatGoogleGenerativeAI(model="gemini-3-pro")
 
 # === 本地模型 (Ollama) ===
-from langchain_community.chat_models import ChatOllama
-ollama_llm = ChatOllama(model="qwen2.5:7b")
+from langchain_ollama import ChatOllama
+ollama_llm = ChatOllama(model="qwen3:8b")
 
 # === 兼容 OpenAI API 的本地部署 ===
 # vLLM / LM Studio / LocalAI 等
@@ -250,13 +250,22 @@ def read_file(file_path: str) -> str:
         return f.read()
 
 # 绑定工具到模型
-llm = ChatOpenAI(model="gpt-4o")
+llm = ChatOpenAI(model="gpt-5.5")
 llm_with_tools = llm.bind_tools([search_web, read_file])
 
 # 调用时，模型会自动判断是否需要调用工具
 response = llm_with_tools.invoke("搜索一下 AI Agent 的最新发展")
 print(response.content)
 # 如果模型认为需要调用工具，response.tool_calls 会包含调用信息
+```
+
+> 🆕 **v1 建议**：手动 `bind_tools` + 自己写工具循环，是理解原理的好方式；但在生产项目中，**推荐直接使用 `create_agent`**，它会自动完成"模型 → 工具 → 回传模型 → 直至结束"的完整循环。
+
+```python
+from langchain.agents import create_agent
+
+agent = create_agent(model="gpt-5.5", tools=[search_web, read_file])
+print(agent.invoke({"messages": [{"role": "user", "content": "搜索 AI Agent 的最新发展"}]}))
 ```
 
 ### 5.2 工具调用的完整流程
@@ -310,9 +319,9 @@ pip install tavily-python
 ```
 
 ```python
-from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_tavily import TavilySearch
 
-search = TavilySearchResults(
+search = TavilySearch(
     max_results=3,
     api_key="tvly-xxx",  # 在 tavily.com 获取
 )
@@ -350,6 +359,33 @@ tools = [read_pdf, query_database, search_web]
 
 ---
 
+### 6.4 通过 MCP 接入工具（2026 首选）
+
+2026 年，接入工具最省心的方式是 **MCP（Model Context Protocol）**：无需自己写工具，直接连接现成的 MCP Server 即可。
+
+```python
+from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain.agents import create_agent
+
+client = MultiServerMCPClient({
+    "filesystem": {
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "/data"],
+    },
+    "weather": {
+        "url": "https://mcp.example.com/weather",
+        "transport": "streamable_http",
+    },
+})
+
+tools = await client.get_tools()          # 直接得到 LangChain 工具列表
+agent = create_agent("gpt-5.5", tools=tools)
+```
+
+> 📌 MCP 的原理、Server 编写与 2026-07-28 新规范，见 [8.10 MCP 协议完全指南](../08-ecosystem/protocols/01-mcp.md)。
+
+---
+
 ## 七、实战：工具增强的问答 Agent
 
 ```python
@@ -384,7 +420,7 @@ def summarize_text(text: str, max_length: int = 200) -> str:
 
 
 # 2. 创建带工具的 Agent
-llm = ChatOpenAI(model="gpt-4o", temperature=0)
+llm = ChatOpenAI(model="gpt-5.5", temperature=0)
 tools = [search_web, get_current_time, summarize_text]
 agent = llm.bind_tools(tools)
 
@@ -457,4 +493,4 @@ print(chat_with_tools("搜索 AI Agent 的最新发展"))
 1. **✅ 基础**：调用 ChatOpenAI 并绑定一个搜索工具，询问需要搜索的问题
 2. **💡 进阶**：定义 3 个自定义工具（搜索、计算、时间），让 Agent 根据问题自动选择
 3. **🚀 挑战**：实现一个完整的工具调用循环——模型选工具 → 执行 → 返回结果给模型 → 生成最终回答
-4. **🔍 探索**：对比 GPT-4o 和 GPT-4o-mini 在工具选择上的准确率差异
+4. **🔍 探索**：对比 gpt-5.5 和 gpt-5-mini 在工具选择上的准确率差异

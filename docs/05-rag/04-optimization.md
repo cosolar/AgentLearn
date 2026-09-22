@@ -45,7 +45,7 @@ class QueryExpander:
     """查询扩展器：将用户查询扩展为多个变体"""
     
     def __init__(self):
-        self.llm = ChatOpenAI(model="gpt-4o", temperature=0.3)
+        self.llm = ChatOpenAI(model="gpt-5.5", temperature=0.3)
     
     def expand(self, query: str, n: int = 3) -> list[str]:
         """生成 n 个查询变体"""
@@ -147,7 +147,7 @@ class Reranker:
     """结果重排序"""
     
     def __init__(self):
-        self.llm = ChatOpenAI(model="gpt-4o", temperature=0)
+        self.llm = ChatOpenAI(model="gpt-5.5", temperature=0)
     
     def rerank(self, query: str, docs: List[Document], top_k: int = 3) -> List[Document]:
         """对检索结果重排序"""
@@ -248,7 +248,7 @@ class ContextCompressor:
     """上下文压缩：只保留最相关的部分"""
     
     def __init__(self):
-        self.llm = ChatOpenAI(model="gpt-4o", temperature=0)
+        self.llm = ChatOpenAI(model="gpt-5.5", temperature=0)
     
     def compress(self, query: str, docs: List[Document], max_length: int = 1000) -> str:
         """压缩文档为简洁的上下文"""
@@ -278,7 +278,7 @@ class OptimizedRAG:
     
     def __init__(self, vectorstore):
         self.retriever = vectorstore.as_retriever(search_kwargs={"k": 6})
-        self.llm = ChatOpenAI(model="gpt-4o", temperature=0)
+        self.llm = ChatOpenAI(model="gpt-5.5", temperature=0)
         self.query_expander = QueryExpander()
         self.reranker = Reranker()
         self.compressor = ContextCompressor()

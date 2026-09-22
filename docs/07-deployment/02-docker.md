@@ -178,7 +178,7 @@ docker run -d --name agent-service -p 8000:8000 agent-api:latest
 docker run -d --name agent-service \
   -p 8000:8000 \
   -e OPENAI_API_KEY="sk-xxx" \
-  -e LLM_MODEL_NAME="gpt-4o-mini" \
+  -e LLM_MODEL_NAME="gpt-5-mini" \
   -v /data/kb_data:/app/kb_data \  # 持久化知识库数据
   agent-api:latest
 ```
@@ -227,7 +227,7 @@ services:
       - "8000:8000"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - LLM_MODEL_NAME=gpt-4o-mini
+      - LLM_MODEL_NAME=gpt-5-mini
       - REDIS_URL=redis://redis:6379/0
       - DATABASE_URL=postgresql://user:pass@postgres:5432/agent
     volumes:

@@ -3,7 +3,7 @@ name = "agentlearn"
 version = "1.0.0"
 description = "AI Agent 从零开始构建智能体 - 全面学习教程"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 license = {text = "MIT"}
 authors = [
     {name = "AgentLearn Team", email = "team@agentlearn.dev"}

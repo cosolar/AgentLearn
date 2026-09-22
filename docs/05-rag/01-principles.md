@@ -228,7 +228,84 @@ class ModularRAG:
 
 ---
 
-## 八、本章总结
+## 八、2026 前沿：Agentic RAG 与 GraphRAG
+
+到 2026 年，RAG 已从"固定流程的检索+生成"演进为**由 Agent 自主驱动的智能知识系统**。两个最重要的方向是：
+
+### 8.1 Agentic RAG（智能体化 RAG）
+
+传统 RAG 是"检索一次 → 生成"，而 **Agentic RAG 把控制权交给 Agent**：它可以自己判断"要不要检索""检索几次""是否需要换查询词""答案是否足够好"。
+
+```
+传统 RAG：  问题 → 检索 → 生成            （固定单次）
+Agentic RAG：问题 → 规划 → 检索 → 评估 → 再检索/改写 → ... → 生成
+                        ↑___________________________|
+```
+
+```python
+from langchain.agents import create_agent
+from langchain.tools import tool
+
+
+@tool
+def search_kb(query: str) -> str:
+    """在企业知识库中检索。可以多次调用，用不同角度的关键词。"""
+    docs = vectorstore.similarity_search(query, k=4)
+    return "\n\n".join(d.page_content for d in docs)
+
+
+@tool
+def check_answer_supported(answer: str, evidence: str) -> str:
+    """校验答案是否有检索证据支持，返回'支持'或'不支持'。"""
+    ...
+
+
+agent = create_agent(
+    model="gpt-5.5",
+    tools=[search_kb, check_answer_supported],
+    system_prompt=(
+        "你是知识库问答助手。回答前必须检索；证据不足时换关键词再检索；"
+        "最终回答必须基于检索到的原文，并为每句话标注来源。"
+    ),
+)
+```
+
+**核心思想**：把 RAG 的每个环节（改写、检索、重排、校验）都变成 Agent 可自主调用的**工具**，让它像人一样"按需检索、反复验证"。
+
+### 8.2 GraphRAG（图增强 RAG）
+
+向量检索擅长"找相似的段落"，但不擅长"跨文档的多跳推理"（如"哪些产品同时受 A 政策影响和 B 部门负责？"）。**GraphRAG** 用知识图谱补足：
+
+| 维度 | 向量 RAG | GraphRAG |
+|------|----------|----------|
+| 数据结构 | 文本块向量 | 实体-关系图 + 向量 |
+| 擅长 | 语义相似、局部细节 | 多跳推理、全局综述 |
+| 典型问题 | "X 是什么？" | "X 和 Y 有什么联系？" |
+| 代表实现 | Chroma / FAISS | Microsoft GraphRAG、Neo4j + 向量 |
+
+**混合做法（推荐）**：向量检索拿"局部细节"，图谱检索拿"关系/全局"，两者融合后交给 LLM。
+
+### 8.3 其他 2026 趋势
+
+| 趋势 | 说明 |
+|------|------|
+| **多模态 RAG** | 检索图片、表格、PDF 版面，而不仅是纯文本 |
+| **上下文检索（Contextual Retrieval）** | 分块时用 LLM 为每块补充上下文，显著提升召回 |
+| **自适应检索** | 简单问题不检索，复杂问题多轮检索 |
+| **缓存与增量索引** | 只重新索引变化的文档，降低成本 |
+
+### 8.4 选型建议
+
+```text
+问答型、文档明确          → Advanced RAG（混合检索 + 重排）
+多步推理、关系复杂        → GraphRAG 或 混合方案
+问题开放、需要自主判断    → Agentic RAG
+超大规模、企业级          → Modular RAG + 缓存 + 增量索引
+```
+
+---
+
+## 九、本章总结
 
 | 知识点 | 一句话说明 |
 |--------|------------|
@@ -238,6 +315,8 @@ class ModularRAG:
 | **Naive RAG** | 单次检索+单次生成，简单快速 |
 | **Advanced RAG** | 增加查询优化和结果重排序 |
 | **Modular RAG** | 各模块可独立替换和优化 |
+| **Agentic RAG** | Agent 自主决定检索/改写/校验，适合开放复杂问题 |
+| **GraphRAG** | 用知识图谱增强多跳推理与全局综述 |
 
 ---
 

@@ -166,6 +166,8 @@ system_prompt = """
 | **Self-Ask Agent** | 自主提问并分步回答 | 逐步拆解子问题 | 信息搜索类任务 |
 | **Multi-Agent** | 多个 Agent 协作 | 分工调用不同工具 | 大型复杂项目 |
 
+> 🆕 **2026 实践**：无论上面哪种 Agent 架构，在 LangChain v1 中都可以用 `create_agent` 作为基座，再通过**中间件（Middleware）**注入"规划""反思""人工审批""上下文压缩"等能力（详见 [3.1 核心组件](../03-langchain/01-core-components.md)）。复杂的分支/循环编排则交给 LangGraph（第 4 章）。
+
 ### 5.2 Plan-and-Execute 模式详解
 
 ```text
@@ -236,10 +238,8 @@ simulate_agent_execution()
 ### 6.2 实际使用 LangChain Agent
 
 ```python
-from langchain_openai import ChatOpenAI
-from langchain.agents import create_react_agent, AgentExecutor
-from langchain_core.tools import tool
-from langchain_core.prompts import PromptTemplate
+from langchain.agents import create_agent
+from langchain.tools import tool
 
 # 定义工具
 @tool
@@ -253,34 +253,24 @@ def calculate(expression: str) -> str:
     """执行数学计算"""
     try:
         return str(eval(expression))
-    except:
+    except Exception:
         return "计算错误"
 
-# 初始化 LLM
-llm = ChatOpenAI(model="gpt-4o", temperature=0)
-
-# 创建 Agent
-tools = [search_web, calculate]
-agent = create_react_agent(
-    llm=llm,
-    tools=tools,
-    prompt=PromptTemplate.from_template("{input}"),
+# LangChain v1：一个函数即可创建带"工具循环"的 Agent
+agent = create_agent(
+    model="gpt-5.5",                 # 也可传入 ChatModel 实例
+    tools=[search_web, calculate],
+    system_prompt="你是一个善于使用工具的助手，必要时先搜索再计算。",
 )
 
-# Agent 执行器
-agent_executor = AgentExecutor(
-    agent=agent,
-    tools=tools,
-    verbose=True,  # 打印中间步骤
-    max_iterations=5,  # 最大循环次数
+# 执行（Agent 会自主决定：先搜索 → 再计算 → 组织回答）
+result = agent.invoke(
+    {"messages": [{"role": "user", "content": "搜索 2023 年诺贝尔奖得主人数，并乘以 2"}]}
 )
-
-# 执行
-result = agent_executor.invoke({
-    "input": "计算 2023 年诺贝尔奖得主人数乘以 2 的结果"
-})
-print(result["output"])
+print(result["messages"][-1].content)
 ```
+
+> 🆕 **LangChain v1 的关键变化**：旧的 `create_react_agent` + `AgentExecutor` 组合（v0.x 时代）已被 **`langchain.agents.create_agent`** 取代。新 API 内置了工具循环、持久化、流式输出与中间件能力，**无需再手动配置执行器、max_iterations 等参数**（需要限制时通过中间件或 LangGraph 控制）。
 
 ---
 
@@ -306,6 +296,7 @@ print(result["output"])
 | **终止条件** | 有答案 / 达上限 / 遇异常 |
 | **Plan-and-Execute** | 先制定完整计划，再逐步执行 |
 | **关键参数** | `max_iterations` 控制最大循环轮次 |
+| **LangChain v1** | 用 `create_agent` + 中间件构建生产级 Agent |
 
 ---
 

@@ -259,7 +259,7 @@ def calculate(expr: str) -> str:
 # 节点 1：调用 LLM 思考
 def call_model(state: AgentState) -> dict:
     """LLM 思考并决定下一步行动"""
-    llm = ChatOpenAI(model="gpt-4o", temperature=0)
+    llm = ChatOpenAI(model="gpt-5.5", temperature=0)
     llm_with_tools = llm.bind_tools([search_web, calculate])
     
     response = llm_with_tools.invoke(state["messages"])

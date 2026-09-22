@@ -58,7 +58,7 @@ class PromptGuard:
     """提示注入防护"""
     
     def __init__(self):
-        self.llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+        self.llm = ChatOpenAI(model="gpt-5-mini", temperature=0)
     
     def detect_injection(self, user_input: str) -> dict:
         """检测是否包含提示注入攻击"""
@@ -257,7 +257,7 @@ class SecureAgent:
         self.prompt_guard = PromptGuard()
         self.data_guard = DataGuard()
         self.audit_logger = AuditLogger()
-        self.llm = ChatOpenAI(model="gpt-4o", temperature=0)
+        self.llm = ChatOpenAI(model="gpt-5.5", temperature=0)
     
     def process_request(self, user_id: str, user_input: str) -> str:
         """安全地处理用户请求"""
@@ -344,7 +344,51 @@ SECURITY_CHECKLIST = {
 
 ---
 
-## 七、本章总结
+## 七、2026 安全前沿：提示注入、护栏与沙箱
+
+随着 Agent 获得"动手能力"，安全边界从"内容安全"扩展到"**执行安全**"。
+
+### 7.1 提示注入（Prompt Injection）仍是头号威胁
+
+| 类型 | 场景 | 防御 |
+|------|------|------|
+| **直接注入** | 用户输入"忽略以上指令" | 输入过滤 + 系统提示强化 |
+| **间接注入** | 恶意网页/文档被检索进上下文 | 检索内容隔离、来源校验、最小权限 |
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import PIIMiddleware
+
+agent = create_agent(
+    model="gpt-5.5",
+    tools=[...],
+    middleware=[
+        PIIMiddleware(strategy="redact"),   # 发送给模型前脱敏
+    ],
+)
+```
+
+### 7.2 护栏（Guardrails）
+
+- **输入护栏**：拦截注入、越权、违规请求；
+- **输出护栏**：校验事实、敏感信息、格式；
+- **工具护栏**：高危工具（转账、删除）需 `HumanInTheLoopMiddleware` 审批。
+
+### 7.3 沙箱执行
+
+代码执行类 Agent 必须**在沙箱中运行**：容器隔离 / 无网络 / 资源限额 / 只读文件系统。
+
+| 手段 | 说明 |
+|------|------|
+| 容器沙箱 | Docker / gVisor 隔离执行环境 |
+| 权限最小化 | 工具按需授权，最小权限原则 |
+| 审计日志 | 记录每个工具调用，可追溯 |
+
+> 📌 安全沙箱生态见 [8.8 安全与沙箱](../08-ecosystem/survey/08-security-sandbox.md)。
+
+---
+
+## 八、本章总结
 
 | 风险 | 防护措施 |
 |------|----------|

@@ -34,14 +34,16 @@ Benchmark      →       Dashboard
 
 ## 评估工具全景
 
-| 工具 | ⭐ GitHub | 核心能力 | 特色 |
-|------|-----------|---------|------|
-| **DeepEval** | 8K+ | 全维度评估框架 | Agent 专项测试、自定义指标 |
-| **TruLens** | 5K+ | LLM 可解释性 | 端到端追踪、反馈函数 |
-| **RAGAS** | 10K+ | RAG 质量评估 | 检索/生成/幻觉 三维度 |
-| **AgentBench** | 6K+ | 标准任务集 | 多 Agent 性能排名 |
-| **AgentScore** | 3K+ | 自动评分 | 轻量级、快速评估 |
-| **LangSmith** | 闭源 | 全链路追踪 | LangChain 官方、最完善 |
+| 工具 | 类型 | 核心能力 | 特色 |
+|------|------|---------|------|
+| **LangSmith** | 商用（有免费额度） | 追踪 + 评估 | LangChain 官方、最完善 |
+| **Langfuse** | 开源 | 可观测 + 评估 | 支持自托管、OpenTelemetry |
+| **Arize Phoenix** | 开源 | LLM / 检索分析 | 可本地运行 |
+| **Braintrust** | 商用 | 数据集 + 实验对比 | 评估体验好 |
+| **DeepEval** | 开源 | 全维度评估框架 | Agent 专项测试、CI 集成 |
+| **TruLens** | 开源 | LLM 可解释性 | 端到端追踪、反馈函数 |
+| **RAGAS** | 开源 | RAG 质量评估 | 检索 / 生成 / 幻觉三维度 |
+| **OpenTelemetry GenAI** | 标准 | 统一追踪语义 | `gen_ai.*` 语义约定 |
 
 ---
 
@@ -200,16 +202,18 @@ agentbench run --agent your_agent --task web_browsing
 虽然闭源，但是 LangChain/LangGraph 生态中最完善的监控方案。
 
 ```python
-# 使用 LangSmith 追踪（免费版可用）
+# 使用 LangSmith 追踪（免费额度可用）
 import os
-os.environ["LANGCHAIN_TRACING_V2"] = "true"
-os.environ["LANGCHAIN_API_KEY"] = "ls_..."
+os.environ["LANGSMITH_TRACING"] = "true"
+os.environ["LANGSMITH_API_KEY"] = "ls_..."
 
 # 所有 LangChain 调用自动追踪
 from langchain_openai import ChatOpenAI
-llm = ChatOpenAI(model="gpt-4o")
+llm = ChatOpenAI(model="gpt-5.5")
 llm.invoke("Hello")  # 自动记录到 LangSmith Dashboard
 ```
+
+> 🔄 **2026 变化**：环境变量前缀已由 `LANGCHAIN_*` 改为 `LANGSMITH_*`；同时建议通过 **OpenTelemetry** 导出，避免绑定单一后端。
 
 ### 自建监控体系
 
@@ -297,10 +301,10 @@ jobs:
 
 | 要点 | 说明 |
 |------|------|
-| 📊 | DeepEval 最全面的离线评估框架 |
+| 📊 | DeepEval 提供最全面的离线评估 |
 | 🔍 | TruLens 提供可解释性监控 |
-| 🏆 | AgentBench 用于横向 Benchmark 对比 |
-| 📈 | LangSmith 是 LangChain 生态最佳监控方案 |
+| 🛰️ | LangSmith / Langfuse 负责全链路追踪与在线评估 |
+| 🧩 | OpenTelemetry GenAI 是跨平台的可观测性标准 |
 | 🔔 | 生产环境必须配置告警规则 |
 | 🔄 | 评估应集成到 CI/CD 流程 |
 

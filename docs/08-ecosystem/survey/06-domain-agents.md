@@ -29,13 +29,16 @@
 
 ## 六大领域 Agent 解析
 
-### 1. 编程 Agent — OpenClaw
+### 1. 编程 Agent — Claude Code / Codex / Cursor
+
+代表性产品：**Claude Code**（Anthropic）、**OpenAI Codex**（Agents API）、**Cursor**、**GitHub Copilot**。
 
 **核心能力：**
-- IDE 深度集成（VS Code、JetBrains）
+- IDE / 终端深度集成（VS Code、JetBrains、CLI）
 - 代码生成、补全、审查
 - 安全沙箱执行代码
-- 多文件上下文理解
+- 多文件 / 全仓库上下文理解
+- 通过 **MCP** 接入外部工具（数据库、文档、浏览器）
 
 ```python
 # 用 LangChain 构建编程助手的核心逻辑
@@ -63,7 +66,7 @@ def search_codebase(query: str) -> str:
     return result.stdout[:2000]  # 限制返回长度
 ```
 
-**技术栈：** Tree-sitter（AST 分析）、LSP（语言服务）、Docker（沙箱）
+**技术栈：** Tree-sitter（AST 分析）、LSP（语言服务）、Docker/gVisor（沙箱）、MCP（工具接入）
 
 ### 2. 数据科学 Agent — AutoGen Data Scientist
 

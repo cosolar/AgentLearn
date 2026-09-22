@@ -17,23 +17,25 @@
     输入 Token 数 × 输入单价 +
     输出 Token 数 × 输出单价
 
-示例（GPT-4o）：
-输入：500 tokens × $0.005/1K tokens = $0.0025
-输出：200 tokens × $0.015/1K tokens = $0.0030
-总费用：$0.0055 ≈ 0.04 元
+示例（GPT-5.5 量级）：
+输入：500 tokens × $0.00125/1K tokens = $0.000625
+输出：200 tokens × $0.010/1K tokens = $0.002
+总费用：≈ $0.0026
 ```
 
 ### 1.2 主流模型价格对比
 
 | 模型 | 输入价格 ($/1K tokens) | 输出价格 ($/1K tokens) | 相对成本 |
 |------|----------------------|-----------------------|----------|
-| **GPT-4o** | $0.005 | $0.015 | 高 |
-| **GPT-4o-mini** | $0.00015 | $0.0006 | ⭐ 极低 |
-| **GPT-3.5-turbo** | $0.0015 | $0.002 | 中 |
-| **Claude-3-Haiku** | $0.00025 | $0.00125 | ⭐ 低 |
-| **Claude-3-Sonnet** | $0.003 | $0.015 | 中高 |
+| **GPT-5.5**（旗舰） | ~$0.00125 | ~$0.010 | 中高 |
+| **GPT-5-mini** | ~$0.00025 | ~$0.002 | ⭐ 低 |
+| **Claude Opus 5** | ~$0.015 | ~$0.075 | 高 |
+| **Claude Sonnet 4.6** | ~$0.003 | ~$0.015 | 中 |
+| **Gemini 3 Flash** | ~$0.0001 | ~$0.0004 | ⭐ 极低 |
+| **DeepSeek V4** | ~$0.0003 | ~$0.0012 | ⭐ 低 |
 
-> 💡 **GPT-4o-mini 比 GPT-4o 便宜 30 倍**，在很多场景下效果已经足够好。
+> ⚠️ 上表为**量级示意**，实际价格随厂商调整而变动，请以各厂商官网为准。
+> 💡 **小模型（mini/flash）通常比旗舰便宜 10–50 倍**，简单任务优先使用。
 
 ### 1.3 成本来源分析
 
@@ -69,13 +71,14 @@ class CostCalculator:
     """Token 和成本计算器"""
     
     MODEL_PRICING = {
-        "gpt-4o":           {"input": 0.005, "output": 0.015},
-        "gpt-4o-mini":      {"input": 0.00015, "output": 0.0006},
-        "gpt-3.5-turbo":    {"input": 0.0015, "output": 0.002},
+        "gpt-5.5":          {"input": 0.00125, "output": 0.010},
+        "gpt-5-mini":       {"input": 0.00025, "output": 0.002},
+        "gemini-3-flash":   {"input": 0.0001, "output": 0.0004},
+        "deepseek-v4":      {"input": 0.0003, "output": 0.0012},
         "text-embedding-3-small": {"input": 0.00002, "output": 0.0},
     }
     
-    def __init__(self, model: str = "gpt-4o"):
+    def __init__(self, model: str = "gpt-5.5"):
         self.model = model
         self.pricing = self.MODEL_PRICING.get(model, {"input": 0.01, "output": 0.03})
     
@@ -121,7 +124,7 @@ class CostCalculator:
 
 
 # 使用
-calc = CostCalculator("gpt-4o")
+calc = CostCalculator("gpt-5.5")
 
 # 算一次对话的成本
 dialog_cost = calc.calculate_cost(
@@ -150,8 +153,8 @@ class SmartModelRouter:
     """智能模型路由：根据任务复杂度选择模型"""
     
     def __init__(self):
-        self.cheap_model = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-        self.expensive_model = ChatOpenAI(model="gpt-4o", temperature=0)
+        self.cheap_model = ChatOpenAI(model="gpt-5-mini", temperature=0)
+        self.expensive_model = ChatOpenAI(model="gpt-5.5", temperature=0)
     
     def classify_task(self, task: str) -> str:
         """判断任务复杂度"""
@@ -280,7 +283,7 @@ class ResponseCache:
 
 # 带缓存的 LLM 调用
 class CachedLLM:
-    def __init__(self, model: str = "gpt-4o-mini"):
+    def __init__(self, model: str = "gpt-5-mini"):
         self.llm = ChatOpenAI(model=model)
         self.cache = ResponseCache()
         self.hit_count = 0
@@ -322,7 +325,7 @@ def chat_with_token_limit(question: str, mode: str = "standard") -> str:
     }
     
     llm = ChatOpenAI(
-        model="gpt-4o-mini",
+        model="gpt-5-mini",
         max_tokens=max_output.get(mode, 300),  # 关键参数！
     )
     return llm.invoke(question)
@@ -395,7 +398,7 @@ class CostDashboard:
 
 | 要点 | 建议 |
 |------|------|
-| **模型选择** | 简单任务用 GPT-4o-mini，复杂任务用 GPT-4o |
+| **模型选择** | 简单任务用小模型（gpt-5-mini / gemini-3-flash），复杂任务用旗舰（gpt-5.5 / claude-opus-5） |
 | **Token 压缩** | 减少不必要的上下文，压缩 Prompt |
 | **缓存重复查询** | 相同的提问直接返回缓存结果 |
 | **限制输出长度** | 设置 max_tokens，按需控制输出 |
@@ -407,5 +410,5 @@ class CostDashboard:
 
 1. **✅ 基础**：用 tiktoken 统计你一段对话的 token 数，计算成本
 2. **💡 改进**：为你的 Agent 添加缓存功能，测试缓存命中率
-3. **🚀 挑战**：实现一个"智能模型路由"，根据问题复杂度选择 GPT-4o 或 GPT-4o-mini
+3. **🚀 挑战**：实现一个"智能模型路由"，根据问题复杂度选择 gpt-5.5 或 gpt-5-mini
 4. **🔍 探索**：对比优化前后（使用缓存+小模型+限制输出）的月成本估算

@@ -178,7 +178,7 @@ class AgentState(TypedDict):
 # 最佳实践 1：一个节点只做一件事
 def call_llm_node(state: AgentState) -> dict:
     """节点：调用 LLM（职责单一）"""
-    llm = ChatOpenAI(model="gpt-4o")
+    llm = ChatOpenAI(model="gpt-5.5")
     response = llm.invoke(state["messages"])
     return {
         "messages": [response],

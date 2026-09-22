@@ -47,7 +47,7 @@ class AutoEvaluator:
     """自动化评估 Agent 回答质量"""
     
     def __init__(self):
-        self.llm = ChatOpenAI(model="gpt-4o", temperature=0)
+        self.llm = ChatOpenAI(model="gpt-5.5", temperature=0)
     
     def evaluate_accuracy(self, question: str, answer: str, ground_truth: str) -> dict:
         """评估回答准确性（与标准答案对比）"""
@@ -185,13 +185,13 @@ system_prompt = """
 def select_model(task_type: str):
     """根据任务类型选择模型"""
     models = {
-        "简单问答": "gpt-4o-mini",  # 快速，便宜
-        "复杂推理": "gpt-4o",       # 强大，较贵
-        "代码生成": "gpt-4o",       # 需要强大能力
-        "翻译": "gpt-4o-mini",      # 简单任务够用
-        "总结": "gpt-4o-mini",      # 性价比高
+        "简单问答": "gpt-5-mini",  # 快速，便宜
+        "复杂推理": "gpt-5.5",       # 强大，较贵
+        "代码生成": "gpt-5.5",       # 需要强大能力
+        "翻译": "gpt-5-mini",      # 简单任务够用
+        "总结": "gpt-5-mini",      # 性价比高
     }
-    return models.get(task_type, "gpt-4o-mini")
+    return models.get(task_type, "gpt-5-mini")
 ```
 
 ### 4.4 成本优化
@@ -201,8 +201,8 @@ class CostTracker:
     """成本跟踪器"""
     
     MODEL_COSTS = {
-        "gpt-4o": {"input": 0.005, "output": 0.015},  # 每 1K tokens 美元
-        "gpt-4o-mini": {"input": 0.00015, "output": 0.0006},
+        "gpt-5.5": {"input": 0.005, "output": 0.015},  # 每 1K tokens 美元
+        "gpt-5-mini": {"input": 0.00015, "output": 0.0006},
         "text-embedding-3-small": {"input": 0.00002, "output": 0.0},
     }
     
@@ -393,7 +393,39 @@ class MonitoringDashboard:
 
 ---
 
-## 七、本章总结
+## 七、2026 评估与可观测性工具链
+
+Agent 评估在 2026 年已标准化为"**评估（Eval）+ 可观测性（Observability）**"双轮驱动。
+
+### 7.1 常用平台
+
+| 平台 | 类型 | 特点 |
+|------|------|------|
+| **LangSmith** | 追踪 + 评估 | LangChain 官方，无缝集成 |
+| **Langfuse** | 开源可观测 | 支持自托管、OpenTelemetry |
+| **Arize Phoenix** | 开源 | 侧重 LLM / 检索分析 |
+| **Braintrust / Galileo** | 商业 | 数据集与实验对比能力强 |
+
+### 7.2 评估的三类指标
+
+| 类型 | 指标举例 |
+|------|----------|
+| **最终答案** | 正确性、相关性、忠实度（faithfulness） |
+| **过程（轨迹）** | 工具选择是否正确、步数是否合理 |
+| **系统** | 延迟、成本、失败率 |
+
+### 7.3 Agent 特有的评估维度（2026 重点）
+
+- **轨迹评估**：不只看答案，还要看"中间步骤"是否合理；
+- **工具调用准确率**：是否选对工具、参数是否正确；
+- **鲁棒性**：面对模糊/恶意输入是否稳定；
+- **离线回归**：每次改动跑一遍评测集，防止效果退化。
+
+> 📌 工具对比详见 [8.7 评估与监控工具](../08-ecosystem/survey/07-evaluation-tools.md)。
+
+---
+
+## 八、本章总结
 
 | 知识点 | 一句话说明 |
 |--------|------------|

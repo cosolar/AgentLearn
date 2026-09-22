@@ -135,7 +135,7 @@ from typing import Dict, List
 class Agent:
     """基础 Agent 类"""
     
-    def __init__(self, name: str, system_prompt: str, model: str = "gpt-4o"):
+    def __init__(self, name: str, system_prompt: str, model: str = "gpt-5.5"):
         self.name = name
         self.system_prompt = system_prompt
         self.llm = ChatOpenAI(model=model, temperature=0.7)
@@ -219,7 +219,7 @@ class ReviewAgent(Agent):
 ## 修改建议
 ...
 """,
-            model="gpt-4o",
+            model="gpt-5.5",
         )
 
 
@@ -227,7 +227,7 @@ class SupervisorAgent:
     """主管 Agent：协调整个工作流"""
     
     def __init__(self):
-        self.llm = ChatOpenAI(model="gpt-4o", temperature=0.3)
+        self.llm = ChatOpenAI(model="gpt-5.5", temperature=0.3)
         self.research_agent = ResearchAgent()
         self.writing_agent = WritingAgent()
         self.review_agent = ReviewAgent()
@@ -356,7 +356,44 @@ class Blackboard:
 
 ---
 
-## 七、本章总结
+## 七、2026 多 Agent 生态与协议
+
+2026 年多 Agent 已从"框架内协作"走向"跨框架、跨组织协作"。三点值得关注。
+
+### 7.1 主流多 Agent 框架格局
+
+| 框架 | 定位 | 特点 |
+|------|------|------|
+| **LangGraph** | 图编排运行时 | 精细控制、持久化、HITL |
+| **AgentScope** | 消息驱动分布式 Agent | 多 Agent 通信、分布式部署（见 [8.3 AgentScope](../08-ecosystem/agentscope/index.md)） |
+| **Microsoft Agent Framework** | 企业级 Agent 框架 | AutoGen + Semantic Kernel 合并，1.0 GA |
+| **CrewAI** | 角色化协作 | 上手快，适合角色分工 |
+| **OpenAI Agents SDK** | 轻量编排 | handoff、tracing，与 Responses API 配合 |
+
+> 💡 旧版 **AutoGen / Semantic Kernel** 已并入 **Microsoft Agent Framework（MAF）**，新项目建议直接使用 MAF。
+
+### 7.2 用 A2A 协议实现跨组织协作
+
+过去多 Agent 协作必须"同框架"。**A2A（Agent-to-Agent）v1.0** 让不同厂商、不同框架的 Agent 通过统一协议互相调用：
+
+```text
+你的 Agent ──A2A──▶ 合作方的 Agent ──▶ 完成任务并返回结果
+```
+
+> 📌 详见 [8.11 A2A 协议与 Agent 互操作](../08-ecosystem/protocols/02-a2a.md)。
+
+### 7.3 多 Agent 的工程要点
+
+| 要点 | 建议 |
+|------|------|
+| **通信开销** | 消息尽量结构化、精简，避免"传话游戏" |
+| **终止条件** | 明确轮次/预算上限，防止 Agent 之间无限对话 |
+| **可观测性** | 用 LangSmith / Langfuse 追踪跨 Agent 链路 |
+| **成本控制** | 子 Agent 用便宜模型，汇总/决策用旗舰模型 |
+
+---
+
+## 八、本章总结
 
 | 知识点 | 一句话说明 |
 |--------|------------|

@@ -69,27 +69,30 @@ constraints:
 
 ### 框架选型矩阵
 
-| 场景权重 | LangGraph | AutoGen | CrewAI | Dify | 其他 |
-|---------|-----------|---------|--------|------|------|
-| 单一Agent问答 | ⭐⭐⭐ | ⭐⭐ | ⭐ | ⭐⭐⭐⭐ | Flowise ⭐⭐⭐ |
-| 复杂工作流 | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | DeerFlow ⭐⭐⭐⭐ |
-| 多Agent协作 | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ | AgentScope ⭐⭐⭐⭐ |
-| RAG知识库 | ⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐⭐ | RAGFlow ⭐⭐⭐⭐⭐ |
-| 企业级部署 | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐ | AgentScope ⭐⭐⭐⭐⭐ |
-| 快速原型 | ⭐⭐⭐ | ⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐⭐ | Flowise ⭐⭐⭐⭐ |
-| 编程助手 | ⭐⭐⭐ | ⭐⭐ | ⭐ | ⭐⭐ | OpenClaw ⭐⭐⭐⭐⭐ |
+| 场景权重 | LangChain v1 + LangGraph | OpenAI Agents SDK | Microsoft Agent Framework | CrewAI | 低代码(Dify/n8n) |
+|---------|--------------------------|------------------|---------------------------|--------|------------------|
+| 单一 Agent 问答 | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐ |
+| 复杂工作流 | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
+| 多 Agent 协作 | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ |
+| RAG 知识库 | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐⭐ |
+| 企业级部署 | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐ |
+| 快速原型 | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| 编程 / 工具型 Agent | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ | ⭐⭐ |
+
+> 🔌 **协议优先**：无论选哪个框架，都建议通过 **MCP** 接入工具、通过 **A2A** 做跨系统协作，避免被单一框架锁定。
 
 ### 模型选型矩阵
 
 | 模型 | 推理能力 | 速度 | 成本 | 中文 | 适用场景 |
 |------|---------|------|------|------|---------|
-| **GPT-4o** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | $$$ | ⭐⭐⭐⭐⭐ | 复杂推理、生产环境 |
-| **GPT-4o-mini** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | $ | ⭐⭐⭐⭐⭐ | 对话、简单任务 |
-| **Claude 3.5 Sonnet** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | $$$ | ⭐⭐⭐⭐ | 长文本、代码 |
-| **Gemini 1.5 Pro** | ⭐⭐⭐⭐ | ⭐⭐⭐ | $$ | ⭐⭐⭐ | 多模态、长上下文 |
-| **DeepSeek V3** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | $ | ⭐⭐⭐⭐⭐ | 中文、性价比 |
-| **Qwen 2.5** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | $ | ⭐⭐⭐⭐⭐ | 中文、企业私有化 |
-| **LLaMA 3.2** | ⭐⭐⭐ | ⭐⭐⭐ | 免费 | ⭐⭐ | 本地部署、隐私 |
+| **GPT-5.5** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | $$$ | ⭐⭐⭐⭐⭐ | 复杂推理、Agent、生产环境 |
+| **GPT-5-mini** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | $ | ⭐⭐⭐⭐⭐ | 对话、简单任务 |
+| **Claude Opus 5** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | $$$$ | ⭐⭐⭐⭐ | 代码、长文本、复杂推理 |
+| **Claude Sonnet 4.6** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | $$$ | ⭐⭐⭐⭐ | 通用生产、性价比旗舰 |
+| **Gemini 3 Pro** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | $$ | ⭐⭐⭐ | 多模态、超长上下文 |
+| **Gemini 3 Flash** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | $ | ⭐⭐⭐ | 高并发、低成本 |
+| **DeepSeek V4** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | $ | ⭐⭐⭐⭐⭐ | 中文、性价比 |
+| **Qwen3** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | $ | ⭐⭐⭐⭐⭐ | 中文、企业私有化 |
 
 ### 向量数据库选型
 
@@ -118,16 +121,15 @@ architecture:
   # Agent 层
   agent:
     framework: langgraph
-    LLM: gpt-4o-mini (主要) + gpt-4o (复杂任务)
+    LLM: gpt-5-mini (主要) + gpt-5.5 (复杂任务)
     max_retries: 3
-    verbose: true
   
   # 记忆层
   memory:
-    working: ChatMessageHistory
-    short_term: ConversationSummaryMemory
-    long_term: 
-      type: vector_store
+    working: langgraph_checkpointer
+    short_term: summarization_middleware
+    long_term:
+      type: vector_store / langgraph_store
       engine: qdrant
       embedding: text-embedding-3-small
   
@@ -185,8 +187,8 @@ MVP (1-2周)                   迭代 1 (1-2月)              迭代 2 (2-4月)
                                 🔄 评估体系                🔄 A/B 测试
 
 技术栈：                      技术栈：                   技术栈：
-LangChain + Chroma           + LangGraph               + AgentShield
-GPT-4o-mini                  + Qdrant                  + Milvus
+LangChain v1 + Chroma        + LangGraph               + Langfuse / OTel
+gpt-5-mini                   + Qdrant                  + Milvus
 FastAPI + Docker             + Prometheus              + K8s
 ```
 
@@ -197,10 +199,10 @@ FastAPI + Docker             + Prometheus              + K8s
 ### 场景 1：智能客服 (最常见的场景)
 
 ```yaml
-方案：Dify + GPT-4o-mini + Qdrant
+方案：Dify + gpt-5-mini + Qdrant
 理由：
 - Dify 可视化工单管理
-- GPT-4o-mini 性价比最优
+- gpt-5-mini 性价比最优
 - Qdrant 中等规模足够
 预算：¥3000-5000/月
 团队：1-2 人
@@ -210,11 +212,11 @@ FastAPI + Docker             + Prometheus              + K8s
 ### 场景 2：编程助手
 
 ```yaml
-方案：OpenClaw / LangGraph + Claude 3.5 Sonnet
+方案：LangGraph / Claude Agent SDK + Claude Opus 5
 理由：
-- OpenClaw IDE 集成体验最佳
-- Claude 3.5 Sonnet 代码能力最强
-- 沙箱隔离保证安全
+- Claude Opus 5 代码与长文本能力顶尖
+- 容器沙箱隔离保证安全
+- 工具通过 MCP 统一接入
 预算：¥5000-10000/月
 团队：2-3 人
 工期：4-8 周
@@ -223,11 +225,11 @@ FastAPI + Docker             + Prometheus              + K8s
 ### 场景 3：企业知识库
 
 ```yaml
-方案：RAGFlow / LangChain + Milvus + GPT-4o
+方案：RAGFlow / LangChain + Milvus + gpt-5.5
 理由：
 - RAGFlow 深度文档理解
 - Milvus 支撑海量文档
-- GPT-4o 高精度生成
+- gpt-5.5 高精度生成
 预算：¥10000-30000/月
 团队：3-5 人
 工期：2-3 月
@@ -236,11 +238,11 @@ FastAPI + Docker             + Prometheus              + K8s
 ### 场景 4：自动化工作流
 
 ```yaml
-方案：LangGraph + AutoGen + DeerFlow
+方案：LangGraph + Microsoft Agent Framework + A2A
 理由：
 - LangGraph 编排核心逻辑
-- AutoGen 多 Agent 协作
-- DeerFlow 事件驱动触发
+- MAF 提供企业级多 Agent 协作
+- A2A 实现跨系统 Agent 互操作
 预算：¥15000-50000/月
 团队：5-8 人
 工期：3-6 月
@@ -249,7 +251,7 @@ FastAPI + Docker             + Prometheus              + K8s
 ### 场景 5：个人学习/小项目
 
 ```yaml
-方案：本教程全栈 + GPT-4o-mini + Chroma
+方案：本教程全栈 + gpt-5-mini + Chroma
 成本：¥100-500/月（Token 费用）
 工期：本教程 8 周 + 项目 2 周
 优势：完全控制、无供应商锁定、技能积累
@@ -269,6 +271,7 @@ FastAPI + Docker             + Prometheus              + K8s
 □ 是否制定了分阶段实施计划？
 □ 是否有回滚/容灾方案？
 □ 是否配置了监控告警？
+□ 是否通过 MCP / A2A 降低框架锁定风险？
 ```
 
 ---

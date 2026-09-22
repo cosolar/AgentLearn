@@ -88,7 +88,7 @@ crew = Crew(agents=[manager, dev, tester], tasks=tasks, process=Process.hierarch
 
 ### 模式二：平等对话式协作 (Peer-to-Peer)
 
-**代表框架：** AutoGen（默认模式）、Swarm
+**代表框架：** Microsoft Agent Framework（对话协作）、OpenAI Agents SDK（handoff）
 
 ```
          ┌──────────┐
@@ -159,7 +159,7 @@ company.start_project("开发一个电商网站")
 
 ### 模式四：竞争/辩论式协作 (Competitive)
 
-**代表框架：** MultiAgentBench、LangGraph Debate
+**代表框架：** LangGraph Debate（自建）、多模型投票
 
 ```
          ┌──────────┐
@@ -213,7 +213,7 @@ workflow.add_node("judge", judge)
 | **可预测性** | 高 | 低 | 高 | 中 |
 | **适用规模** | 大 | 中 | 大 | 小 |
 | **通信开销** | 中 | 高 | 低 | 低 |
-| **代表框架** | CrewAI | AutoGen | MetaGPT | MultiAgentBench |
+| **代表框架** | CrewAI | Microsoft Agent Framework | MetaGPT | LangGraph 自建 |
 
 ---
 
@@ -223,10 +223,22 @@ workflow.add_node("judge", judge)
 |------|---------|---------|
 | 软件项目开发 | 流程化 | MetaGPT |
 | 市场研究报告 | 层级式 | CrewAI |
-| 代码审查/校对 | 平等对话 | AutoGen |
+| 代码审查/校对 | 平等对话 | Microsoft Agent Framework |
 | 风险评估 | 竞争辩论 | LangGraph 自建 |
-| 智能客服 | 层级式 | AgentScope/EDDI |
-| 研究实验 | 平等对话 | AutoGen |
+| 智能客服 | 层级式 | AgentScope / MAF |
+| 研究实验 | 平等对话 | OpenAI Agents SDK / MAF |
+
+---
+
+## 2026 补充：跨组织协作用 A2A
+
+以上四种模式都发生在**同一个系统内**。当需要跨团队、跨公司、跨框架协作时，推荐基于 **A2A 协议**：
+
+```text
+你的主管 Agent ──A2A──▶ 合作方 Agent（可能是任意框架实现）
+```
+
+A2A 让"多 Agent 协作"不再受框架边界限制。详见 [8.11 A2A 协议与 Agent 互操作](../protocols/02-a2a.md)。
 
 ---
 

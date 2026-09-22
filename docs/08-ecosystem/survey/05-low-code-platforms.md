@@ -38,10 +38,12 @@
 |------|-----------|---------|---------|---------|
 | **Dify** | 70K+ | 全能型 AI 应用平台 | 可视化编辑器、RAG 流水线、多模型 | Docker/K8s |
 | **RAGFlow** | 30K+ | 深度文档理解 RAG | 拖拽工作流、多模态支持 | Docker |
-| **Flowise** | 35K+ | LangChain 可视化 | 拖拽式 Chain 构建、实时调试 | Docker/本地 |
+| **Flowise** | 35K+ | LangChain 可视化 | 拖拽式 Flow 构建、实时调试 | Docker/本地 |
+| **n8n** | 130K+ | 通用工作流自动化 | 400+ 集成节点、可接 LLM/Agent | Docker/云 |
 | **AnythingLLM** | 30K+ | 极简文档聊天 | 上传即聊、本地优先 | Docker/本地 |
-| **AgentGPT** | 25K+ | 浏览器原生 Agent | 零部署、网页使用 | 网页版 |
 | **Cognita** | 8K+ | 企业 MLOps | 合规知识库、权限控制 | 云/本地 |
+
+> 💡 **2026 趋势**：Dify、n8n、Flowise 等平台纷纷支持 **MCP**，可与自研 Agent 互通；低代码与编码方案的边界正在消失。
 
 ---
 
@@ -124,10 +126,10 @@ Flowise 本质上是 **LangChain 的可视化封装**。如果你已经学会 La
 拖拽组件 ↔ 对应 LangChain 组件
 ─────────────────────────────────
 LLM Chain     ↔  prompt | llm | parser
-Agent         ↔  AgentExecutor
-Tool          ↔  @tool decorated function
+Agent         ↔  create_agent（LangChain v1）
+Tool          ↔  @tool 装饰的函数
 Vector Store  ↔  VectorStoreRetriever
-Memory        ↔  ChatMessageHistory
+Memory        ↔  checkpointer / store
 ```
 
 **适用场景：**
@@ -163,8 +165,8 @@ RAGFlow 增强：
 | 快速搭建客服机器人 | Dify | 最全面的开箱即用 |
 | 企业知识库 | RAGFlow | 深度文档理解 |
 | LangChain 原型验证 | Flowise | 与编码方案无缝切换 |
+| 系统集成 / 自动化 | n8n | 集成节点最丰富 |
 | 个人文档助手 | AnythingLLM | 极简，本地优先 |
-| 快速演示/MVP | AgentGPT | 无需部署 |
 | 企业级合规知识库 | Cognita | MLOps + 权限控制 |
 
 ---

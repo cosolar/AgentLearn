@@ -16,10 +16,10 @@
 工具调用生态分层：
 ┌─────────────────────────────────────────────────────────┐
 │                    应用层                                │
-│  LangChain Tools / Toolkit / OpenFunction                │
+│  LangChain Tools / Toolkit / MCP                          │
 ├─────────────────────────────────────────────────────────┤
 │                    编排层                                │
-│  LangGraph (条件路由) / DeerFlow (事件驱动)              │
+│  LangGraph (条件路由) / MAF (企业级协作)                 │
 ├─────────────────────────────────────────────────────────┤
 │                    调用层                                │
 │  Functionary (精度优化) / ToolFormer (自动发现)          │
@@ -82,19 +82,19 @@ def combined_search(query: str) -> str:
 from litellm import completion
 
 # 使用 OpenAI
-response = completion(model="gpt-4o", messages=[{"role": "user", "content": "Hello"}])
+response = completion(model="gpt-5.5", messages=[{"role": "user", "content": "Hello"}])
 
 # 切换到 Claude - 只需改 model 名
-response = completion(model="claude-3-5-sonnet-20241022", messages=[{"role": "user", "content": "Hello"}])
+response = completion(model="claude-sonnet-4-6", messages=[{"role": "user", "content": "Hello"}])
 
 # 切换到本地模型
 response = completion(model="ollama/llama3.2", messages=[{"role": "user", "content": "Hello"}])
 
 # 负载均衡
 response = completion(
-    model="gpt-4o", 
+    model="gpt-5.5", 
     messages=[...],
-    fallbacks=["claude-3-5-sonnet", "gemini-1.5-pro"],
+    fallbacks=["claude-sonnet-4-6", "gemini-3-pro"],
 )
 ```
 
@@ -102,7 +102,7 @@ response = completion(
 ```python
 from langchain_community.chat_models import ChatLiteLLM
 
-llm = ChatLiteLLM(model="gpt-4o", temperature=0.7)
+llm = ChatLiteLLM(model="gpt-5.5", temperature=0.7)
 # 之后的用法和 ChatOpenAI 完全一样
 ```
 
@@ -116,25 +116,35 @@ llm = ChatLiteLLM(model="gpt-4o", temperature=0.7)
 - **工具选择优化**：减少工具误选率
 
 ```python
-from functionary import Functionary
-
-agent = Functionary(model="gpt-4o", tools=[search, calculator, ...])
-
-# Functionary 自动处理：
-# 1. 工具选择准确性校验
-# 2. 参数格式验证
-# 3. 错误自动重试
-result = agent.run("查询2025年GDP并计算增长率")
+# 思路：在工具调用前后加一层校验（伪代码）
+def safe_tool_call(tool, args):
+    validate_schema(tool, args)          # 参数校验
+    try:
+        return tool.invoke(args)
+    except Exception:
+        return retry_with_fix(tool, args)  # 失败重试 / 修复
 ```
 
-### 4. OpenFunction — 开源工具市场
+### 4. MCP — 工具接入标准（2026 首选）
 
-社区驱动的工具发现和共享平台。
+**Model Context Protocol** 是 2026 年工具生态的事实标准：写一个 MCP Server，所有支持 MCP 的 Agent 都能用。
 
 **核心能力：**
-- **工具市场**：上传、发现、评分工具
-- **版本管理**：工具版本追踪
-- **兼容性检查**：自动检查工具与模型的兼容性
+- **统一接入**：一次编写，跨框架复用（LangChain / OpenAI Agents SDK / MAF ...）
+- **生态庞大**：官方 + 社区 MCP Server 数量已达十万级
+- **能力可发现**：客户端可通过 `tools/list` 动态发现工具
+- **安全可控**：OAuth 加固、权限最小化、可审计
+
+```python
+from langchain_mcp_adapters.client import MultiServerMCPClient
+
+client = MultiServerMCPClient({
+    "github": {"url": "https://mcp.github.com/mcp", "transport": "streamable_http"},
+})
+tools = await client.get_tools()
+```
+
+> 📌 详见 [8.10 MCP 协议完全指南](../protocols/01-mcp.md)。
 
 ---
 
@@ -168,7 +178,7 @@ Agent 根据当前状态动态选择下一步调用的工具。这是 LangGraph 
 
 多个工具同时执行，结果汇总。适合需要多源信息的任务。
 
-### 模式四：事件驱动（DeerFlow 模式）
+### 模式四：事件驱动（pub/sub 模式）
 
 ```
 事件 → 触发规则 → 匹配工具 → 执行 → 产生新事件 → ...
@@ -219,7 +229,7 @@ def enterprise_tool_call(tool_name: str, args: dict):
 | 🛠️ | LangChain Tools 700+ 工具是最丰富的生态 |
 | 🔌 | LiteLLM 解决多模型接入的碎片化问题 |
 | 🎯 | Functionary 提升工具调用精度 |
-| 📦 | OpenFunction 提供工具发现与共享 |
+| 📦 | MCP 提供标准化的工具发现与共享 |
 | 🏢 | 企业级使用需要 Toolkit 治理 |
 
 ---
@@ -227,6 +237,6 @@ def enterprise_tool_call(tool_name: str, args: dict):
 ## 📝 课后练习
 
 1. **实践题**：用 LiteLLM 替换项目中的 ChatOpenAI，测试切换模型
-2. **集成题**：搜索 OpenFunction 市场，找到 3 个有用的工具并集成到项目中
+2. **集成题**：浏览 MCP Server 生态，找到 3 个有用的 Server 并接入到项目中
 3. **设计题**：为一个电商客服场景设计工具调用流程（顺序/条件/并行混合）
 

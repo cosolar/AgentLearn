@@ -71,9 +71,13 @@ print(f"猫 vs 汽车: {sim_1_3:.3f}")  # ~0.30
 
 | 模型 | 维度 | 特点 | 适用场景 |
 |------|------|------|----------|
-| `text-embedding-3-small` | 1536 | 性价比高，速度快 | **默认推荐** |
+| `text-embedding-3-small` | 1536 | 性价比高，速度快 | **默认推荐（英文/通用）** |
 | `text-embedding-3-large` | 3072 | 精度更高（但更贵） | 对精度要求极高的场景 |
-| `text-embedding-ada-002` | 1536 | 上一代模型 | 兼容旧项目 |
+| `voyage-3` / `voyage-3-large` | 1024 / 2048 | 检索质量领先 | 高质量 RAG |
+| `bge-m3` | 1024 | 开源，多语言，支持稠密+稀疏 | 私有化、中文 |
+| `Qwen3-Embedding` | 可变 | 开源，中文强 | 国产化部署 |
+
+> 💡 **2026 实践**：多语言/中文场景优先考虑 `bge-m3`、`Qwen3-Embedding`；商用质量优先选 `voyage-3`；纯英文入门用 `text-embedding-3-small` 即可。
 
 > 💡 **选择建议**：没有特殊需求时，直接使用 `text-embedding-3-small`。它在大多数场景下已经足够好，且成本只有 large 版本的 1/5。
 
@@ -103,7 +107,7 @@ uv add chromadb
 #### 完整流程
 
 ```python
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
@@ -134,8 +138,8 @@ vectorstore = Chroma.from_documents(
     persist_directory="./chroma_db",  # 持久化到磁盘
 )
 
-# 4. 持久化
-vectorstore.persist()
+# 4. 持久化：langchain-chroma 在写入时已自动落盘到 persist_directory
+#    （旧版 vectorstore.persist() 已弃用）
 
 # 5. 检索测试
 query = "什么是 AI Agent？"
@@ -313,7 +317,7 @@ rag_chain = (
     | ChatPromptTemplate.from_template(
         "基于以下上下文回答问题：\n\n{context}\n\n问题：{question}"
     )
-    | ChatOpenAI(model="gpt-4o")
+    | ChatOpenAI(model="gpt-5.5")
     | StrOutputParser()
 )
 
@@ -372,9 +376,40 @@ results = vectorstore.similarity_search(
 
 ---
 
-## 七、最佳实践与优化建议
+## 七、进阶：混合检索与重排（2026 标配）
 
-### 7.1 文档预处理
+单纯"向量检索"往往不是最优解。生产级 RAG 普遍采用 **混合检索（Hybrid Search）+ 重排（Rerank）**：
+
+```
+用户查询
+   │
+   ├── 稠密检索（向量）──┐
+   │                     ├── 融合（RRF）── 重排模型（Rerank）── Top-K
+   └── 稀疏检索（BM25）──┘
+```
+
+| 技术 | 解决的问题 | 常用实现 |
+|------|-----------|----------|
+| **混合检索** | 纯向量漏掉关键词精确匹配 | BM25 + 向量，RRF 融合 |
+| **重排 Rerank** | 召回结果排序不精 | `bge-reranker`、Cohere Rerank、Voyage Rerank |
+| **查询改写** | 用户问法差 | HyDE、多查询、Query Rewrite |
+| **父文档检索** | 块太小丢上下文 | Parent-Document Retriever |
+
+```python
+# 重排示意（langchain-cohere）
+from langchain_cohere import CohereRerank
+
+reranker = CohereRerank(model="rerank-v3.5", top_n=3)
+reranked_docs = reranker.compress_documents(documents=retrieved_docs, query=query)
+```
+
+> 📌 完整的检索优化（含 GraphRAG、Agentic RAG）见 [5.4 检索优化技巧](../05-rag/04-optimization.md)。
+
+---
+
+## 八、最佳实践与优化建议
+
+### 8.1 文档预处理
 
 ```python
 def prepare_documents_for_vectorstore(raw_docs: list) -> list:
@@ -400,7 +435,7 @@ def prepare_documents_for_vectorstore(raw_docs: list) -> list:
     return chunks
 ```
 
-### 7.2 常见性能问题
+### 8.2 常见性能问题
 
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
@@ -411,7 +446,7 @@ def prepare_documents_for_vectorstore(raw_docs: list) -> list:
 
 ---
 
-## 八、本章总结
+## 九、本章总结
 
 | 概念 | 一句话说明 |
 |------|------------|

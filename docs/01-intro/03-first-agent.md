@@ -4,6 +4,8 @@
 
 环境搭建好了，我们来做一件最酷的事——**写一个真正能用的 AI Agent**。本文将通过一个完整的示例，带你理解 Agent 的基本结构、代码组织方式，以及每一步背后的原理。**即使你没有 LLM 开发经验，跟着做也能跑起来。**
 
+> 📌 **关于版本**：本文使用 LangChain **v1** 下最基础、最稳定的消息调用方式（`ChatModel.invoke`）。LangChain v1 推荐的"标准 Agent 构建方式"是 `create_agent`（见 [3.1 核心组件](../03-langchain/01-core-components.md) 与 [3.4 聊天 Agent](../03-langchain/04-chat-agent.md)），本文先打好基础，后续再平滑升级。
+
 ---
 
 ## 一、前置知识
@@ -57,7 +59,7 @@ def create_agent():
     """创建并返回一个 LLM 实例"""
     # 初始化 LLM
     llm = ChatOpenAI(
-        model="gpt-4o",          # 使用的模型名称
+        model="gpt-5.5",          # 使用的模型名称
         temperature=0.7,         # 创意度（0=确定性，1=高创意）
     )
     return llm
@@ -133,7 +135,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 ```python
 llm = ChatOpenAI(
-    model="gpt-4o",
+    model="gpt-5.5",
     temperature=0.7,
 )
 ```
@@ -229,10 +231,10 @@ python examples/01-hello-agent/main.py
 
 ```python
 # 事实型 Agent（确定性高）
-llm_factual = ChatOpenAI(model="gpt-4o", temperature=0.0)
+llm_factual = ChatOpenAI(model="gpt-5.5", temperature=0.0)
 
 # 创意型 Agent（变化丰富）
-llm_creative = ChatOpenAI(model="gpt-4o", temperature=0.9)
+llm_creative = ChatOpenAI(model="gpt-5.5", temperature=0.9)
 
 # 多次调用同一模型，观察输出差异
 for i in range(3):
@@ -252,7 +254,7 @@ for i in range(3):
 ```python
 def chat_multi_turn():
     """多轮对话：把历史消息累积传递"""
-    llm = ChatOpenAI(model="gpt-4o", temperature=0.7)
+    llm = ChatOpenAI(model="gpt-5.5", temperature=0.7)
     
     # 消息历史列表
     messages = [
@@ -297,6 +299,40 @@ chat_multi_turn()
 
 ---
 
+### 4.4 展望：用 LangChain v1 的 `create_agent` 构建真正的 Agent
+
+前面我们用"消息 + invoke"实现了会聊天、有记忆的助手，但它还**不会调用工具、不会自主决策**。从 LangChain v1 起，构建一个真正的 Agent 只需要一个函数：
+
+```python
+from langchain.agents import create_agent
+from langchain.tools import tool
+
+
+@tool
+def get_weather(city: str) -> str:
+    """查询指定城市的天气。"""
+    # 实际项目里这里会调用真实 API
+    return f"{city} 今天晴，25℃，适合出行。"
+
+
+agent = create_agent(
+    model="gpt-5.5",                     # 也可传 ChatModel 实例
+    tools=[get_weather],
+    system_prompt="你是一个贴心的出行助手，用中文回答。",
+)
+
+result = agent.invoke(
+    {"messages": [{"role": "user", "content": "北京今天要带伞吗？"}]}
+)
+print(result["messages"][-1].content)
+```
+
+短短几行，Agent 就能自主判断"需要调用天气工具"，然后组织自然语言回答。它的底层是一个标准的 **Agent 循环**（模型 → 调用工具 → 把工具结果回传模型 → 直到不再调用工具）。
+
+> 🚀 完整的 `create_agent` 用法、中间件、结构化输出，将在[第三部分：LangChain v1 实战](../03-langchain/01-core-components.md)中系统展开。
+
+---
+
 ## 五、常见错误与排查
 
 ### ❌ API Key 未配置
@@ -335,7 +371,7 @@ httpx.ConnectError: [Errno 61] Connection refused
 curl -X POST "https://api.example.com/v1/chat/completions" \
   -H "Authorization: Bearer $LLM_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model":"gpt-4o","messages":[{"role":"user","content":"hi"}]}'
+  -d '{"model":"gpt-5.5","messages":[{"role":"user","content":"hi"}]}'
 ```
 
 ### ❌ 模型不存在
@@ -348,15 +384,17 @@ The model `gpt-999` does not exist
 **解决方案**：使用有效的模型名称：
 ```python
 # ✅ 正确
-llm = ChatOpenAI(model="gpt-4o")
+llm = ChatOpenAI(model="gpt-5.5")
 
 # ❌ 错误
 llm = ChatOpenAI(model="gpt-999")
 
-# 常见可用模型
-# gpt-4o       - 最新全能模型（推荐）
-# gpt-4-turbo  - 上代旗舰
-# gpt-3.5-turbo - 快速经济
+# 常见可用模型（2026 年 9 月）
+# gpt-5.5        - OpenAI 旗舰（Sol 线，复杂推理/Agent 首选）
+# gpt-5-mini     - OpenAI 轻量高效（高性价比）
+# claude-opus-5  - Anthropic 旗舰，代码与长文本天花板
+# gemini-3-pro   - Google 多模态旗舰
+# deepseek-chat  - 国产高性价比
 ```
 
 ### ❌ 虚拟环境未激活
@@ -388,6 +426,7 @@ source .venv/bin/activate  # macOS/Linux
 | **temperature** | 控制输出的创造性，0=确定，1=创意 |
 | **多轮对话** | 通过累积消息列表实现"记忆" |
 | **错误排查** | API Key 问题最常见，其次为网络和模型名 |
+| **下一步** | 用 LangChain v1 的 `create_agent` 让 Agent 自主调用工具 |
 
 ---
 

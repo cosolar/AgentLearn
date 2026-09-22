@@ -1,10 +1,10 @@
-# 2.1 Prompt 工程基础 —— 掌握与 LLM 对话的艺术
+# 2.1 Prompt 工程与上下文工程 —— 掌握与 LLM 对话的艺术
 
 ## 📖 导读
 
 > **相同的模型，不同的 Prompt → 完全不同的结果。**
 
-Prompt Engineering（提示工程）是 Agent 开发者的基础技能，也是决定 Agent 表现上限的关键因素。**一个好的 Prompt 能让 GPT-3.5 击败 GPT-4，一个差的 Prompt 能让 GPT-4 变得不如 GPT-3.5。** 本文将从零开始，系统讲解 Prompt 工程的核心技法、进阶模式，以及大量可复用的实战模板。
+Prompt Engineering（提示工程）是 Agent 开发者的基础技能，也是决定 Agent 表现上限的关键因素。**在 2026 年，它已经升级为更宏观的"上下文工程（Context Engineering）"——不只是写好一句话，而是精心设计送进模型窗口的全部信息。** 本文将从零开始，系统讲解 Prompt 工程的核心技法、进阶模式、上下文工程方法论，以及大量可复用的实战模板。
 
 ---
 
@@ -16,7 +16,8 @@ Prompt Engineering（提示工程）是 Agent 开发者的基础技能，也是�
 | **User Prompt** | 用户的输入，包含具体问题和指令 |
 | **Few-shot** | 在 Prompt 中提供示例，引导模型按示例的模式输出 |
 | **Token** | LLM 的最小处理单元，1 个英文字 ≈ 1 token，1 个汉字 ≈ 2-3 tokens |
-| **Context Window** | LLM 能处理的输入最大长度（如 GPT-4o 是 128K tokens） |
+| **Context Window** | LLM 能处理的输入最大长度（GPT-5.x 约 128K–400K，Claude Sonnet 4.6 约 200K+，Gemini 3 可达数百万 tokens） |
+| **上下文工程** | 设计送入模型窗口的**全部信息**（指令、示例、检索内容、工具结果、记忆） |
 
 ---
 
@@ -368,7 +369,65 @@ prompt = """
 
 ---
 
-## 八、本章总结
+## 八、进阶：从 Prompt 工程到上下文工程（Context Engineering）
+
+到了 2026 年，业界共识是：**决定 Agent 效果的不再只是"那句 Prompt 写得好不好"，而是"送进上下文窗口的信息组织得好不好"。** 这就是 **上下文工程（Context Engineering）**。
+
+### 8.1 什么是上下文？
+
+一次 LLM 调用真正接收到的"上下文"，远不止用户的提问：
+
+```
+┌─────────────────── 上下文窗口（Context Window）───────────────────┐
+│ ① System Prompt   角色、规则、输出约束                             │
+│ ② 工具定义        Agent 可调用的工具及其 schema                     │
+│ ③ 记忆           历史对话摘要 / 用户画像 / 长期记忆检索结果          │
+│ ④ RAG 检索片段   从知识库召回的文档块                               │
+│ ⑤ 工具执行结果   上一轮工具返回的 Observation                       │
+│ ⑥ 当前用户输入    本轮的 HumanMessage                              │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### 8.2 上下文工程的四个核心动作
+
+| 动作 | 解决的问题 | 常用手段 |
+|------|-----------|----------|
+| **写入（Write）** | 该记什么 | 记忆抽取、要点沉淀、外部存储 |
+| **选择（Select）** | 该放什么进窗口 | RAG 检索、记忆召回、工具筛选 |
+| **压缩（Compress）** | 窗口放不下 | 摘要、裁剪（`trim_messages`）、分层记忆 |
+| **隔离（Isolate）** | 信息互相干扰 | 子 Agent、分步处理、专用上下文 |
+
+### 8.3 LangChain v1 的工程化支持
+
+LangChain v1 把上下文工程做成了"开箱即用"的**中间件（Middleware）**：
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import (
+    SummarizationMiddleware,      # 历史过长时自动摘要压缩
+    HumanInTheLoopMiddleware,     # 敏感工具调用前人工审批
+    PIIMiddleware,                # 发送前脱敏敏感信息
+)
+
+agent = create_agent(
+    model="gpt-5.5",
+    tools=[...],
+    middleware=[
+        SummarizationMiddleware(trigger={"tokens": 4000}),
+        PIIMiddleware(),
+    ],
+)
+```
+
+> 📌 中间件的完整讲解见 [3.1 LangChain v1 核心组件](../03-langchain/01-core-components.md)。记忆系统的工程实现见 [2.4 记忆机制](04-memory.md)。
+
+### 8.4 一句话记住
+
+> **Prompt Engineering 关心"怎么说"，Context Engineering 关心"给模型看什么"。** 后者才是 2026 年 Agent 工程的核心竞争力。
+
+---
+
+## 九、本章总结
 
 | 技巧 | 一句话概括 |
 |------|------------|
@@ -379,6 +438,7 @@ prompt = """
 | **ReAct** | 边思考边行动 |
 | **Plan-and-Solve** | 先计划后执行 |
 | **Self-Refine** | 自己检查并优化自己的输出 |
+| **上下文工程** | 设计送进上下文窗口的全部信息（写入/选择/压缩/隔离） |
 
 ---
 

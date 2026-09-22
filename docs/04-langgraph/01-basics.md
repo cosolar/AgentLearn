@@ -236,7 +236,83 @@ invoke({"input": "你好"})
 
 ---
 
-## 六、常见问题
+## 六、LangGraph v1 核心能力全景（2026）
+
+LangGraph 已发布 **v1 / v1.1**，官方定位是**低层编排运行时（orchestration runtime）**。它与 LangChain v1 的关系是：**LangChain 的 `create_agent` 就构建在 LangGraph 之上**。当你需要更细粒度的控制时，才直接使用 LangGraph。
+
+四大核心能力：
+
+| 能力 | 说明 | 关键词 |
+|------|------|--------|
+| **持久化（Persistence）** | 每一步状态自动落盘，支持断点恢复 | `checkpointer`、`store` |
+| **持久执行（Durable Execution）** | 进程崩溃后可从中断处续跑 | 长时任务、可靠性 |
+| **流式（Streaming）** | 实时输出 token / 工具调用 / 推理轨迹 | `stream_mode`、typed streaming v2 |
+| **人机协同（Human-in-the-Loop）** | 关键节点暂停，等待人工审批/修改 | `interrupt`、`Command` |
+
+### 6.1 v1.1 的类型化流式（typed streaming v2）
+
+v1.1 引入了更规范的流式输出。向 `stream()` / `astream()` 传入 `version="v2"`，输出会被统一为 **`StreamPart`** 格式，每个分片包含 `type`、`ns`、`data` 字段：
+
+```python
+for part in app.stream(
+    {"messages": [{"role": "user", "content": "你好"}]},
+    stream_mode=["messages", "updates"],
+    version="v2",
+):
+    # part 形如: {"type": "messages", "ns": (), "data": (chunk, metadata)}
+    print(part["type"], part["ns"])
+```
+
+> 💡 类型化流式让前端/网关可以**稳定地解析**多路流（消息、状态更新、自定义事件），是生产级流式接口的首选。
+
+### 6.2 持久化与断点恢复
+
+```python
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.graph import StateGraph, END
+
+workflow = StateGraph(MyState)
+# ... 添加节点与边 ...
+app = workflow.compile(checkpointer=InMemorySaver())
+
+config = {"configurable": {"thread_id": "task-1"}}
+app.invoke({"input": "开始"}, config)      # 中途崩溃也不怕
+app.invoke({"input": "继续"}, config)      # 从上次状态续跑
+```
+
+| Checkpointer | 场景 |
+|--------------|------|
+| `InMemorySaver` | 开发调试 |
+| `SqliteSaver` | 单机持久化 |
+| `PostgresSaver` | 生产、多实例 |
+
+### 6.3 人机协同（HITL）
+
+```python
+from langgraph.types import interrupt, Command
+
+def review_node(state):
+    # 在此处暂停，把决策权交给人类
+    decision = interrupt({"question": "是否批准这笔转账？", "amount": state["amount"]})
+    return {"approved": decision}
+
+# 恢复执行时传入人工决策
+app.invoke(Command(resume=True), config)
+```
+
+### 6.4 与 LangChain v1 的关系
+
+| 你的需求 | 选择 |
+|----------|------|
+| 快速构建标准 Agent（工具循环） | LangChain `create_agent` |
+| 精细控制分支/循环/并行 | LangGraph 自定义图 |
+| 需要持久化/HITL/时间旅行 | 两者皆可，LangGraph 更底层灵活 |
+
+> 📌 本教程 3.4 节用 `create_agent` + `checkpointer` 构建聊天 Agent，其实已经在用 LangGraph 的能力了。
+
+---
+
+## 七、常见问题
 
 ### ❌ State 类型错误
 
@@ -280,7 +356,7 @@ workflow.add_edge("a", "b")
 
 ---
 
-## 七、本章总结
+## 八、本章总结
 
 | 概念 | 一句话说明 |
 |------|------------|

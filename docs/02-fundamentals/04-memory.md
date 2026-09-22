@@ -4,7 +4,9 @@
 
 > **一个没有记忆的 Agent，就像一个人面对你说过的每句话都当作第一次听到。**
 
-记忆是 Agent 从"工具"进化为"伙伴"的关键能力。有了记忆，Agent 才能**记住用户说过的话、记住之前任务的结果、持续优化自己的行为**。本文将从记忆的底层原理到实战实现，全面讲解 Agent 记忆机制。
+记忆是 Agent 从"工具"进化为"伙伴"的关键能力。有了记忆，Agent 才能**记住用户说过的话、记住之前任务的结果、持续优化自己的行为**。本文将从记忆的底层原理讲到 2026 年的工程实现，带你建立完整的记忆体系认知。
+
+> 🆕 **2026 版更新**：旧的 `langchain.memory`（`ConversationBufferMemory` 等）已在 **LangChain v1** 中迁至 [`langchain-classic`](https://pypi.org/project/langchain-classic/)。本教程改用 **LangGraph 的 `checkpointer` / `store`** 与 **LangChain v1 中间件**来构建记忆，这也是当前的生产级做法。
 
 ---
 
@@ -12,10 +14,12 @@
 
 | 概念 | 说明 |
 |------|------|
-| **LLM 的无状态性** | 每次 LLM 调用都是独立的，不保留之前的对话 |
-| **Context Window** | LLM 一次能处理的最大 token 数（GPT-4o 约 128K） |
-| **Token 成本** | 每次调用都会按输入输出的 token 数计费 |
-| **消息类型** | SystemMessage / HumanMessage / AIMessage |
+| **LLM 的无状态性** | 每次调用都是独立的，模型本身不保留任何对话 |
+| **Context Window** | 一次能处理的最大 token 数（GPT-5.x 约 128K–400K） |
+| **Token 成本** | 每次调用按输入/输出 token 计费，历史越长越贵 |
+| **消息类型** | `SystemMessage` / `HumanMessage` / `AIMessage` / `ToolMessage` |
+| **Checkpointer** | 保存 Agent 图状态的持久化组件（会话级记忆） |
+| **Store** | 跨会话的长期键值存储（长期记忆） |
 
 ---
 
@@ -51,417 +55,345 @@ Agent：你叫小明 ✅
 
 ---
 
-## 三、记忆的分类与实现
+## 三、记忆的分类体系
 
-### 3.1 短期记忆（Short-term Memory）
+在工程上，记忆通常按"**存多久 + 存哪里**"分为三类：
 
-**工作原理**：将对话历史累积在消息列表中，每次调用时把完整历史传入 LLM。
+| 类型 | 生命周期 | 典型载体 | 用途 |
+|------|----------|----------|------|
+| **工作记忆（Working）** | 单次任务内 | 图状态 / 变量 | 当前任务的中间结果 |
+| **短期记忆（Short-term）** | 单个会话内 | 消息列表 + checkpointer | 多轮对话上下文 |
+| **长期记忆（Long-term）** | 跨会话、长期 | 向量库 / KV store / 记忆框架 | 用户画像、经验沉淀 |
 
-```python
-from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationChain
-from langchain_openai import ChatOpenAI
-
-llm = ChatOpenAI(model="gpt-4o")
-
-# 短期记忆 - 缓冲区记忆
-memory = ConversationBufferMemory()
-conversation = ConversationChain(
-    llm=llm,
-    memory=memory,
-    verbose=False,
-)
-
-# 对话
-conversation.predict(input="你好，我是小明")
-conversation.predict(input="我喜欢编程")
-conversation.predict(input="你还记得我叫什么吗？")
-# → 记得！你叫小明
-conversation.predict(input="我最大的爱好是什么？")
-# → 编程！
+```
+┌──────────────────────────────────────────────────────┐
+│  长期记忆 (Store / 向量库 / Mem0 · Letta · Zep)        │  跨会话
+├──────────────────────────────────────────────────────┤
+│  短期记忆 (消息列表 + Checkpointer)                    │  单个会话
+├──────────────────────────────────────────────────────┤
+│  工作记忆 (当前图状态 / 中间变量)                       │  单次任务
+└──────────────────────────────────────────────────────┘
 ```
 
-**内存中的数据**：
+---
+
+## 四、短期记忆：会话内的上下文
+
+### 4.1 最朴素的实现：消息列表
+
+LLM 无状态，所谓"记忆"其实是我们**每次把历史消息重新传进去**：
 
 ```python
-# memory.buffer 的内容
-[
-    ("human", "你好，我是小明"),
-    ("ai", "你好，小明！很高兴认识你。"),
-    ("human", "我喜欢编程"),
-    ("ai", "太棒了！编程是一项非常有价值的技能。"),
-    ("human", "你还记得我叫什么吗？"),
-    ("ai", "当然记得！你叫小明。"),
-]
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+
+messages = [SystemMessage(content="你是一个友好的助手。")]
+
+def chat(user_input: str) -> str:
+    messages.append(HumanMessage(content=user_input))
+    reply = llm.invoke(messages)   # 每次带上完整历史
+    messages.append(reply)
+    return reply.content
 ```
 
-**优点**：实现简单，100% 准确  
-**缺点**：对话越长，token 消耗越大，成本线性增长
+**优点**：实现简单、100% 准确。  
+**缺点**：对话越长，token 消耗越大（成本线性增长），最终撑爆上下文窗口。
 
-### 3.2 窗口记忆（Window Memory）
+### 4.2 控制长度：`trim_messages`
 
-只保留最近 N 轮对话，丢弃早期的对话。
+LangChain 提供了按 **token / 消息条数** 裁剪上下文的工具：
 
 ```python
-from langchain.memory import ConversationBufferWindowMemory
+from langchain_core.messages import trim_messages, HumanMessage
 
-# 只保留最近 3 轮对话
-memory = ConversationBufferWindowMemory(k=3)
+messages = [...]  # 很长的历史
 
-conversation = ConversationChain(
-    llm=llm,
-    memory=memory,
+# 只保留最近、且总量不超过 max_tokens 的消息
+trimmed = trim_messages(
+    messages,
+    max_tokens=2000,
+    strategy="last",          # 从最新的开始保留
+    token_counter=llm,        # 用模型自带的计数器精确计数
+    include_system=True,      # 保留 SystemMessage
 )
-
-# 经过 5 轮对话后，只记得最后 3 轮
-# 优点：token 消耗可控
-# 缺点：最早的对话被遗忘了
 ```
 
-**k 值选择的权衡**：
+### 4.3 生产级做法：LangGraph Checkpointer
 
-| k 值 | token 消耗 | 记忆范围 | 适用场景 |
-|------|-----------|----------|----------|
-| 2-3 | 极低 | 最近几轮 | 简单问答、客服 |
-| 5-10 | 中 | 最近对话 | 一般聊天 |
-| 20-50 | 高 | 较长历史 | 复杂分析任务 |
-| 全量 | 极高 | 全部历史 | 需要完整回顾的场景 |
-
-### 3.3 摘要记忆（Summary Memory）
-
-LLM 定期对历史对话进行**自动摘要**，用摘要代替完整历史。
+`trim_messages` 仍需自己管理列表。**LangGraph 的 `checkpointer` 能自动持久化每一步的对话状态**，并支持断点恢复、时间旅行：
 
 ```python
-from langchain.memory import ConversationSummaryMemory
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.prebuilt import create_react_agent   # 或用 langchain 的 create_agent
 
-# 摘要记忆
-memory = ConversationSummaryMemory(llm=llm)
-conversation = ConversationChain(
-    llm=llm,
-    memory=memory,
+# 开发用内存版；生产可换 Postgres / SQLite
+checkpointer = SqliteSaver.from_conn_string("checkpoints.db")
+
+agent = create_react_agent(
+    model="gpt-5.5",
+    tools=[],
+    checkpointer=checkpointer,
 )
 
-# 每轮对话后，LLM 自动生成摘要
-# 记忆中的内容：
-"""
-用户是一个叫小明的程序员，使用 Python 语言，
-最近在学习 AI Agent 开发。
-他对 LangChain 框架特别感兴趣。
-"""
+# 用 thread_id 区分不同会话
+config = {"configurable": {"thread_id": "user-001"}}
+
+agent.invoke({"messages": [HumanMessage("我叫小明")]}, config)
+result = agent.invoke({"messages": [HumanMessage("我叫什么？")]}, config)
+print(result["messages"][-1].content)   # → 你叫小明
+```
+
+| 记忆载体 | 适用场景 | 持久化 |
+|----------|----------|--------|
+| `InMemorySaver` | 本地开发、单进程 | ❌ 重启即丢 |
+| `SqliteSaver` | 单机、中小规模 | ✅ 文件 |
+| `PostgresSaver` | 生产、多实例 | ✅ 数据库 |
+| `AsyncPostgresSaver` | 异步高并发生产 | ✅ 数据库 |
+
+> 📌 Checkpointer 的完整用法见 [2.2 状态管理与节点](../04-langgraph/02-state-nodes.md)。
+
+### 4.4 自动摘要压缩：SummarizationMiddleware
+
+当历史过长时，与其粗暴截断，不如**让模型自动摘要**。LangChain v1 内置了 `SummarizationMiddleware`：
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import SummarizationMiddleware
+
+agent = create_agent(
+    model="gpt-5.5",
+    tools=[],
+    middleware=[
+        # 当上下文超过 4000 token 时，自动把历史压缩成摘要
+        SummarizationMiddleware(trigger={"tokens": 4000}),
+    ],
+)
 ```
 
 **工作原理**：
 
 ```
-原始对话（1000 tokens）→ LLM 摘要（100 tokens）
+原始对话（1000 tokens）→ 摘要（100 tokens）
 ↓
 下次对话：摘要 + 最新消息（150 tokens）
 ↓
-新摘要（100 tokens）
-↓
-持续迭代...
+再摘要 → 持续迭代，token 稳定在低位
 ```
-
-**优点**：token 消耗稳定增长而非线性增长  
-**缺点**：摘要可能丢失细节，且摘要本身有 token 成本
-
-### 3.4 向量记忆（Vector Memory）
-
-通过语义搜索从大量记忆中检索相关信息。适用于**长期记忆**。
-
-```python
-from langchain.memory import VectorStoreRetrieverMemory
-from langchain_community.vectorstores import Chroma
-from langchain_openai import OpenAIEmbeddings
-
-# 初始化向量存储
-embeddings = OpenAIEmbeddings()
-vectorstore = Chroma(
-    embedding_function=embeddings,
-    persist_directory="./memory_db"
-)
-
-# 创建向量记忆
-memory = VectorStoreRetrieverMemory(
-    retriever=vectorstore.as_retriever(search_kwargs={"k": 3}),
-    memory_key="relevant_memory",
-)
-
-# 保存记忆
-memory.save_context(
-    {"input": "我叫小明，来自北京"},
-    {"output": "已记录"}
-)
-
-# 检索相关记忆
-# 输入问"用户来自哪里"，能自动匹配到"小明"和"北京"
-```
-
-**优点**：可存储海量记忆，语义检索灵活  
-**缺点**：需要额外配置向量数据库，有 embedding 成本
 
 ---
 
-## 四、记忆类型对比总结
+## 五、长期记忆：跨会话的知识沉淀
+
+### 5.1 向量记忆（语义召回）
+
+把重要信息存入向量库，需要时按语义检索回来：
+
+```python
+from langchain_openai import OpenAIEmbeddings
+from langchain_chroma import Chroma
+from langchain_core.documents import Document
+
+vectorstore = Chroma(
+    collection_name="long_term_memory",
+    embedding_function=OpenAIEmbeddings(model="text-embedding-3-small"),
+    persist_directory="./memory_db",
+)
+
+# 写入记忆
+vectorstore.add_documents([
+    Document(page_content="用户叫小明，北京人，喜欢 Python 和咖啡。")
+])
+
+# 语义召回：问"用户来自哪"也能命中
+hits = vectorstore.similarity_search("用户的家乡在哪里？", k=2)
+```
+
+### 5.2 LangGraph Store（跨会话长期记忆）
+
+`store` 是 LangGraph 提供的**跨线程（跨会话）**键值存储，天然适合用户画像：
+
+```python
+from langgraph.store.memory import InMemoryStore
+from langgraph.prebuilt import create_react_agent
+
+store = InMemoryStore()
+
+agent = create_react_agent(
+    model="gpt-5.5",
+    tools=[],
+    store=store,
+)
+
+# 不同 thread_id（会话）共享同一个 namespace 下的长期记忆
+config = {"configurable": {"user_id": "u-001"}}
+```
+
+> 💡 `checkpointer` 管**会话内**，`store` 管**跨会话**，二者可以组合使用。
+
+### 5.3 专用记忆框架（2026 生态）
+
+当长期记忆需求变复杂（抽取、去重、遗忘、图谱化），可以引入专门的记忆层：
+
+| 框架 | 特点 | 适合 |
+|------|------|------|
+| **Mem0** | 开箱即用，自动抽取/更新用户记忆，支持向量+图 | 通用个性化 Agent |
+| **Letta**（原 MemGPT） | 把记忆当作"操作系统"分页管理 | 长时自主 Agent |
+| **Zep** | 时序知识图谱，专注对话记忆 | 客服/助手类 |
+| **LangMem** | LangChain 官方记忆 SDK，与 LangGraph 无缝集成 | LangChain 技术栈 |
+
+```python
+# 以 Mem0 为例（示意）
+from mem0 import Memory
+
+m = Memory()
+m.add("我喜欢喝美式咖啡", user_id="u-001")          # 写入
+hits = m.search("用户喜欢喝什么？", user_id="u-001")  # 召回
+```
+
+### 5.4 模型原生记忆工具
+
+2026 年，主流模型厂商也开始提供**原生记忆能力**。例如 Anthropic 的 Claude 提供了 memory tool，允许模型在客户端读写 `/memories` 目录，把"记忆"变成模型可以直接操作的工具，而不是纯靠提示词拼接。
+
+---
+
+## 六、记忆类型对比总结
 
 | 类型 | 存储方式 | 检索方式 | Token 消耗 | 适合场景 |
 |------|----------|----------|-----------|----------|
-| **缓冲区记忆** | 完整消息列表 | 全量读取 | 高（线性增长） | 短对话 |
-| **窗口记忆** | 最近 N 轮消息 | 截取最新 | 可控 | 客服、常规对话 |
-| **摘要记忆** | LLM 生成的摘要 | 读取摘要 | 中（稳定） | 长对话 |
-| **向量记忆** | 向量数据库 | 语义搜索 | 低（按需检索） | 跨会话、海量记忆 |
+| **完整消息列表** | 内存中的 messages | 全量传入 | 高（线性增长） | 短对话 |
+| **截断/窗口** | 最近 N 条/条数上限 | 截取最新 | 可控 | 客服、常规对话 |
+| **摘要压缩** | 模型生成的摘要 | 读取摘要 | 中（稳定） | 长对话 |
+| **向量长期记忆** | 向量数据库 | 语义搜索 | 低（按需） | 跨会话、海量记忆 |
+| **记忆框架** | 向量 + 图 + KV | 混合检索 | 低 | 复杂个性化 |
 
 ---
 
-## 五、实战：构建带记忆的对话 Agent
+## 七、实战：构建带记忆的对话 Agent
 
-### 5.1 完整的聊天 Agent 实现
+### 7.1 用 LangGraph Checkpointer 实现会话记忆
 
 ```python
-from langchain_openai import ChatOpenAI
-from langchain.memory import ConversationBufferWindowMemory
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables import RunnablePassthrough
-from langchain_core.messages import HumanMessage, AIMessage
-from langchain_core.output_parsers import StrOutputParser
+from langchain.agents import create_agent
+from langgraph.checkpoint.memory import InMemorySaver
+from langchain_core.messages import HumanMessage
 
-class ChatAgentWithMemory:
-    """带记忆的聊天 Agent"""
-    
-    def __init__(self, model="gpt-4o", window_size=5):
-        self.llm = ChatOpenAI(model=model, temperature=0.7)
-        self.memory = ConversationBufferWindowMemory(
-            k=window_size,
-            return_messages=True,  # 返回消息对象而非字符串
-        )
-        self.prompt = ChatPromptTemplate.from_messages([
-            ("system", "你是一个友好的 AI 助手，记住用户说过的重要信息。"),
-            MessagesPlaceholder(variable_name="history"),
-            ("human", "{input}"),
-        ])
-        self.parser = StrOutputParser()
-    
-    def chat(self, user_input: str) -> str:
-        """单轮对话"""
-        # 1. 从记忆中获取历史消息
-        history = self.memory.load_memory_variables({})
-        messages = history.get("history", [])
-        
-        # 2. 构建完整的消息链
-        chain = (
-            RunnablePassthrough.assign(
-                history=lambda x: messages
-            )
-            | self.prompt
-            | self.llm
-            | self.parser
-        )
-        
-        # 3. 调用 LLM
-        response = chain.invoke({"input": user_input})
-        
-        # 4. 保存到记忆
-        self.memory.save_context(
-            {"input": user_input},
-            {"output": response}
-        )
-        
-        return response
-    
-    def get_conversation_summary(self) -> str:
-        """获取对话摘要"""
-        memory_vars = self.memory.load_memory_variables({})
-        history = memory_vars.get("history", [])
-        summary_parts = []
-        for msg in history:
-            if isinstance(msg, HumanMessage):
-                summary_parts.append(f"👤 用户: {msg.content}")
-            elif isinstance(msg, AIMessage):
-                summary_parts.append(f"🤖 AI: {msg.content}")
-        return "\n".join(summary_parts)
+checkpointer = InMemorySaver()
 
+agent = create_agent(
+    model="gpt-5.5",
+    tools=[],
+    system_prompt="你是一个友好的 AI 助手，记住用户说过的重要信息。",
+    checkpointer=checkpointer,
+)
 
-# 使用示例
-agent = ChatAgentWithMemory(window_size=5)
+def chat(session_id: str, text: str) -> str:
+    config = {"configurable": {"thread_id": session_id}}
+    result = agent.invoke(
+        {"messages": [HumanMessage(content=text)]},
+        config,
+    )
+    return result["messages"][-1].content
 
-print("🤖 带记忆的 Agent 开始对话\n")
-while True:
-    user_input = input("👤 你: ")
-    if user_input.lower() == "exit":
-        break
-    
-    response = agent.chat(user_input)
-    print(f"🤖 AI: {response}\n")
-
-print("\n📋 对话记录：")
-print(agent.get_conversation_summary())
+print(chat("s1", "你好，我叫小明"))          # → 你好，小明！
+print(chat("s1", "我喜欢喝美式咖啡"))        # → 记住了
+print(chat("s1", "我叫什么？喜欢喝什么？"))  # → 你叫小明，喜欢美式咖啡
+print(chat("s2", "我叫什么？"))              # → 新会话，不知道
 ```
 
-### 5.2 记忆管理最佳实践
+> ✅ 同一个 `thread_id` = 同一个会话，跨调用自动保持记忆；不同 `thread_id` 之间互不干扰。
+
+### 7.2 记忆管理最佳实践
 
 ```python
 class MemoryManager:
-    """记忆管理器"""
-    
-    def __init__(self, max_token_limit=2000):
-        self.max_token_limit = max_token_limit
-        self.short_term = []  # 短期记忆
-        self.long_term = {}   # 长期记忆（关键信息）
-        
-    def add_to_short_term(self, message: dict):
-        """添加短期记忆"""
+    """一个简单的记忆分层管理器（示意）"""
+
+    def __init__(self, max_tokens: int = 4000):
+        self.max_tokens = max_tokens
+        self.short_term: list = []   # 会话内消息
+        self.long_term: dict = {}    # 跨会话关键信息
+
+    def add(self, message):
         self.short_term.append(message)
         self._prune_if_needed()
-    
-    def add_to_long_term(self, key: str, value: str):
-        """添加长期记忆"""
+
+    def remember(self, key: str, value: str):
+        """沉淀长期记忆（真实项目应写入向量库/Store）"""
         self.long_term[key] = value
-    
-    def extract_key_info(self, text: str) -> dict:
-        """从文本中提取关键信息"""
-        # 使用 LLM 提取用户的重要信息
-        # 如：姓名、偏好、重要日期等
-        pass
-    
+
     def _prune_if_needed(self):
-        """控制记忆大小"""
-        total_tokens = self._estimate_tokens()
-        while total_tokens > self.max_token_limit:
-            # 移除最早的对话
-            removed = self.short_term.pop(0)
-            total_tokens -= self._estimate_message_tokens(removed)
-    
-    def _estimate_tokens(self) -> int:
-        """估算 token 数量"""
-        # 简单估算：中文字符 * 2.5
-        total = 0
-        for msg in self.short_term:
-            total += self._estimate_message_tokens(msg)
-        return total
-    
-    def _estimate_message_tokens(self, msg: dict) -> int:
-        return len(msg.get("content", "")) * 2.5
+        # 用 trim_messages 做精确裁剪
+        from langchain_core.messages import trim_messages
+        self.short_term = trim_messages(
+            self.short_term, max_tokens=self.max_tokens, strategy="last"
+        )
 ```
+
+**实践清单**：
+
+1. **分层**：工作记忆 ≠ 短期记忆 ≠ 长期记忆，分别存储；
+2. **裁剪**：始终用 `trim_messages` 控制上下文；
+3. **摘要**：长对话用 `SummarizationMiddleware` 自动压缩；
+4. **持久化**：生产环境把 checkpointer 换成 Postgres；
+5. **隔离**：按 `thread_id` / `user_id` 隔离，防止串记忆；
+6. **可遗忘**：提供删除/过期机制，尊重用户隐私。
 
 ---
 
-## 六、记忆策略选择指南
+## 八、常见问题与排查
 
-### 6.1 不同场景的推荐配置
-
-| 应用场景 | 推荐记忆类型 | 原因 |
-|----------|-------------|------|
-| **客服机器人** | 窗口记忆(k=3) | 只关心当前问题上下文 |
-| **AI 学习助手** | 摘要记忆 | 需要跟踪学习进度 |
-| **个人助理** | 向量记忆 | 需要记住用户长期偏好 |
-| **代码助手** | 窗口记忆(k=10) | 需要整个函数/文件的上下文 |
-| **数据分析 Agent** | 缓冲区+摘要 | 短期要精确，长期要总结 |
-
-### 6.2 记忆的成本管理
+### ❌ 记忆丢失（重启后消失）
 
 ```python
-def estimate_memory_cost(memory_type: str, num_turns: int) -> dict:
-    """估算不同记忆类型的成本"""
-    costs = {
-        "buffer": {
-            "5_turns": "~500 tokens",
-            "20_turns": "~2000 tokens", 
-            "100_turns": "~10000 tokens ❌ 高成本",
-        },
-        "window_k5": {
-            "5_turns": "~500 tokens",
-            "20_turns": "~500 tokens ✅ 恒定",
-            "100_turns": "~500 tokens ✅ 恒定",
-        },
-        "summary": {
-            "5_turns": "~300 tokens ✅",
-            "20_turns": "~400 tokens ✅",
-            "100_turns": "~500 tokens ✅",
-        },
-    }
-    return costs.get(memory_type, {})
+# 原因：使用了 InMemorySaver / InMemoryStore
+# 解决：生产环境换成持久化后端
+from langgraph.checkpoint.postgres import PostgresSaver
+
+with PostgresSaver.from_conn_string("postgresql://...") as checkpointer:
+    checkpointer.setup()
+    agent = create_agent(model="gpt-5.5", tools=[], checkpointer=checkpointer)
 ```
+
+### ❌ Token 超限（上下文溢出）
+
+```python
+# 解决：裁剪 + 摘要双保险
+trimmed = trim_messages(messages, max_tokens=3000, strategy="last")
+# 并配置 SummarizationMiddleware(trigger={"tokens": 4000})
+```
+
+### ❌ 记忆混淆（多用户串记忆）
+
+```python
+# 原因：所有用户共用一个 thread_id
+# 解决：用 session_id / user_id 隔离
+config = {"configurable": {"thread_id": f"user-{user_id}"}}
+```
+
+### ❌ 记忆污染（记错/记串）
+
+- 长期记忆写入前做**去重与冲突检测**；
+- 给记忆条目加**时间戳与来源**，检索时优先近期；
+- 引入**人工审核**处理敏感记忆（可用 `HumanInTheLoopMiddleware`）。
 
 ---
 
-## 七、常见问题与排查
-
-### ❌ 记忆丢失
-
-```python
-# 问题：重启程序后所有记忆消失
-# 原因：默认记忆存储在内存中
-# 解决：使用持久化存储
-
-# 文件持久化
-import json
-
-def save_memory(memory_data: dict, path: str = "memory.json"):
-    with open(path, "w") as f:
-        json.dump(memory_data, f)
-
-def load_memory(path: str = "memory.json") -> dict:
-    try:
-        with open(path, "r") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {}
-```
-
-### ❌ Token 超限
-
-```python
-# 问题：Context Window 溢出
-# 原因：记忆累积过多
-# 解决：使用窗口记忆或摘要记忆
-
-# 或手动截断
-def truncate_memory(messages: list, max_tokens: int = 4000) -> list:
-    """截断消息列表到最大 token 数"""
-    total = 0
-    truncated = []
-    for msg in reversed(messages):  # 保留最新消息
-        tokens = len(msg.content) * 2.5
-        if total + tokens > max_tokens:
-            break
-        truncated.insert(0, msg)
-        total += tokens
-    return truncated
-```
-
-### ❌ 记忆混淆
-
-```python
-# 问题：多用户共用同一个记忆
-# 原因：没有按会话隔离
-# 解决：用 session_id 隔离
-
-memory_store = {}  # {session_id: Memory}
-
-def get_memory(session_id: str):
-    if session_id not in memory_store:
-        memory_store[session_id] = ConversationBufferWindowMemory(k=5)
-    return memory_store[session_id]
-```
-
----
-
-## 八、本章总结
+## 九、本章总结
 
 | 知识点 | 一句话说明 |
 |--------|------------|
-| **短期记忆** | 完整的消息历史，精确但 token 成本高 |
-| **窗口记忆** | 只保留最近 N 轮，成本可控 |
-| **摘要记忆** | LLM 自动压缩历史，成本稳定 |
-| **向量记忆** | 语义检索，适合长期海量存储 |
-| **成本管控** | 选择合适的记忆类型，设置窗口大小 |
-| **持久化** | 跨会话记忆需要存储到文件或数据库 |
+| **记忆的本质** | LLM 无状态，记忆靠"把历史重新喂回去" |
+| **短期记忆** | 消息列表 + `checkpointer`，会话内保持连贯 |
+| **上下文裁剪** | `trim_messages` 控制 token，避免溢出 |
+| **摘要压缩** | `SummarizationMiddleware` 自动压缩长历史 |
+| **长期记忆** | 向量库 / LangGraph `store` / Mem0 等框架 |
+| **隔离与持久化** | 用 thread_id 隔离，生产用数据库后端 |
 
 ---
 
 ## 📝 课后练习
 
-1. **✅ 基础**：使用 `ConversationBufferWindowMemory` 实现一个 `k=3` 的聊天 Agent，运行 5 轮对话，观察前 2 轮的信息是否被遗忘
-2. **💡 对比**：分别用窗口记忆和摘要记忆实现同一个聊天场景，观察回答质量的差异和 token 消耗的差异
-3. **🚀 挑战**：实现一个"关键信息提取"功能，在对话中自动提取用户的姓名、偏好等关键信息存入长期记忆，并在后续对话中能正确使用这些信息
-4. **🔍 探索**：使用 LangChain 的 `VectorStoreRetrieverMemory` 配合 Chroma 实现一个跨会话记忆的 Agent
+1. **✅ 基础**：用 `InMemorySaver` + `create_agent` 实现一个带会话记忆的聊天 Agent，运行多轮对话验证记忆生效
+2. **💡 对比**：分别用"完整列表"、"`trim_messages` 裁剪"、"`SummarizationMiddleware` 摘要"三种方式实现长对话，对比回答质量与 token 消耗
+3. **🚀 挑战**：实现"关键信息提取"——在对话中自动抽取用户的姓名、偏好，用 LangGraph `store` 或向量库沉淀为长期记忆，并在后续会话中正确使用
+4. **🔍 探索**：调研 Mem0 / Letta / Zep / LangMem 四个记忆框架的差异，写出你的选型结论

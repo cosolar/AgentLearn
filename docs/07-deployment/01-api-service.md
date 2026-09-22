@@ -116,7 +116,7 @@ class SupportAgent:
     """客服 Agent 核心逻辑"""
     
     def __init__(self):
-        self.llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7)
+        self.llm = ChatOpenAI(model="gpt-5-mini", temperature=0.7)
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
         self.vectorstore = Chroma(
             embedding_function=self.embeddings,
@@ -318,7 +318,7 @@ async def health_check():
         status="ok",
         version="1.0.0",
         uptime=time.time() - start_time,
-        model="gpt-4o-mini",
+        model="gpt-5-mini",
     )
 
 

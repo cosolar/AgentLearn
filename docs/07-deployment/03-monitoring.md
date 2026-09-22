@@ -134,14 +134,14 @@ logging.critical("知识库不可用")              # CRITICAL: 系统不可用
 # ✅ 好的：结构化、可搜索
 logger.info(json.dumps({
     "event": "llm_call",
-    "model": "gpt-4o",
+    "model": "gpt-5.5",
     "input_tokens": 500,
     "output_tokens": 200,
     "latency_ms": 1500,
 }))
 
 # ❌ 差的：纯文本、难以解析
-logger.info("调用 GPT-4o，输入 500 tokens，输出 200 tokens，耗时 1.5s")
+logger.info("调用 gpt-5.5，输入 500 tokens，输出 200 tokens，耗时 1.5s")
 ```
 
 ---
@@ -286,7 +286,7 @@ async def metrics_middleware(request, call_next):
     latency = time.time() - start
     LATENCY_HISTOGRAM.observe(latency)
     REQUESTS_TOTAL.labels(
-        model="gpt-4o-mini",
+        model="gpt-5-mini",
         status=response.status_code,
     ).inc()
     
@@ -347,7 +347,7 @@ def process_request(message: str):
     tracer.add_span("retrieve_knowledge", {"retriever": "chroma"})
     
     # 阶段 3: 调用 LLM
-    tracer.add_span("llm_call", {"model": "gpt-4o", "tokens": 500})
+    tracer.add_span("llm_call", {"model": "gpt-5.5", "tokens": 500})
     
     # 阶段 4: 生成回答
     tracer.add_span("generate_response", {"response_length": 300})
@@ -384,7 +384,7 @@ class MonitoringMiddleware(BaseHTTPMiddleware):
         method = request.method
         status = response.status_code
         
-        REQUESTS_TOTAL.labels(model="gpt-4o-mini", status=status).inc()
+        REQUESTS_TOTAL.labels(model="gpt-5-mini", status=status).inc()
         LATENCY_HISTOGRAM.observe(latency)
         
         # 日志
@@ -445,7 +445,42 @@ class AlertManager:
 
 ---
 
-## 八、本章总结
+## 八、2026 可观测性标准：OpenTelemetry GenAI
+
+Agent 一次请求往往包含 5–15 次 LLM 调用与若干工具调用，**"没有追踪等于在黑盒里调试"**。2026 年的事实标准是 **OpenTelemetry GenAI 语义约定**。
+
+### 8.1 统一 Span 语义
+
+OpenTelemetry 已为 LLM/Agent 定义了统一的 span 语义（`gen_ai.*` 属性），主流框架与平台均支持导出：
+
+```python
+from opentelemetry import trace
+
+tracer = trace.get_tracer("agent")
+
+with tracer.start_as_current_span("agent.run") as span:
+    span.set_attribute("gen_ai.system", "anthropic")
+    span.set_attribute("gen_ai.request.model", "claude-sonnet-4-6")
+    # ... 执行 Agent ...
+```
+
+### 8.2 追踪 + 评估一体化
+
+| 能力 | 平台 |
+|------|------|
+| 全链路 Trace | LangSmith、Langfuse、Arize |
+| 成本 / Token 看板 | Langfuse、Helicone |
+| 在线评估 | LangSmith Evaluators、Braintrust |
+
+### 8.3 三条必看指标
+
+1. **每次请求的 LLM / 工具调用次数**——异常增长往往是死循环的前兆；
+2. **P95 延迟与失败率**——按 Agent / 工具维度拆分；
+3. **单位任务成本**（token × 单价）——并设置阈值告警。
+
+---
+
+## 九、本章总结
 
 | 组件 | 工具/方法 | 说明 |
 |------|-----------|------|

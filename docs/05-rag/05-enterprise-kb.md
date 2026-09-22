@@ -69,7 +69,7 @@ load_dotenv()
 
 # LLM 配置
 LLM_CONFIG = {
-    "model": os.getenv("LLM_MODEL_NAME", "gpt-4o"),
+    "model": os.getenv("LLM_MODEL_NAME", "gpt-5.5"),
     "temperature": 0.1,  # 知识问答需要低温度，保持准确
 }
 

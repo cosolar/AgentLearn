@@ -297,7 +297,7 @@ class RAGSystem:
     
     def __init__(self, persist_dir="./chroma_db"):
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-        self.llm = ChatOpenAI(model="gpt-4o", temperature=0)
+        self.llm = ChatOpenAI(model="gpt-5.5", temperature=0)
         self.vectorstore = self._init_vectorstore(persist_dir)
         self.retriever = self._init_retriever()
         self.chain = self._build_chain()

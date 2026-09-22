@@ -121,7 +121,7 @@ pydantic_parser = PydanticOutputParser(pydantic_object=Person)
 
 ### 3.3 使用 LCEL 连接组件
 
-LangChain Expression Language（LCEL）用 `|` 操作符将组件串联。
+LangChain Expression Language（LCEL）用 `|` 操作符将组件串联。**在 LangChain v1 中，LCEL 依然是构建"确定性工作流"的推荐方式**；而需要"自主决策 + 循环"的场景，则交给 LangGraph（见第 4 章）。
 
 ```python
 from langchain_openai import ChatOpenAI
@@ -129,7 +129,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 # 初始化组件
-llm = ChatOpenAI(model="gpt-4o", temperature=0)
+llm = ChatOpenAI(model="gpt-5.5", temperature=0)
 
 # 定义模板
 prompt = ChatPromptTemplate.from_template(
@@ -162,7 +162,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 
-llm = ChatOpenAI(model="gpt-4o", temperature=0.3)
+llm = ChatOpenAI(model="gpt-5.5", temperature=0.3)
 
 # 一个简单的摘要 Chain
 summarize_prompt = PromptTemplate.from_template(
@@ -284,22 +284,29 @@ for chunk in chain.stream({"topic": "一只会说话的猫"}):
 
 ### 5.1 带记忆的 Chain
 
+> ⚠️ **版本提示**：`ConversationChain`、`ConversationBufferMemory` 等旧的 Memory / Chain 类在 **LangChain v1** 中已迁移到 [`langchain-classic`](https://pypi.org/project/langchain-classic/)。新项目推荐**直接维护消息列表**，或用 LangGraph 的 **checkpointer** 做持久化（见 [第 4 章](../04-langgraph/01-basics.md)）。
+
+最轻量的"记忆"就是自己维护一个消息列表：
+
 ```python
-from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationChain
+from langchain_core.messages import HumanMessage
+from langchain_core.messages import trim_messages
 
-memory = ConversationBufferMemory()
-conversation = ConversationChain(
-    llm=llm,
-    memory=memory,
-    verbose=True,  # 打印中间步骤
-)
+messages = []  # 会话历史
 
-# 多轮对话
-conversation.predict(input="我叫小明")
-conversation.predict(input="我叫什么名字？")
-# 能正确回答：你叫小明
+def chat(question: str) -> str:
+    messages.append(HumanMessage(content=question))
+    # 按 token 裁剪上下文，避免越聊越长
+    trimmed = trim_messages(messages, max_tokens=2000, strategy="last")
+    reply = llm.invoke(trimmed)
+    messages.append(reply)
+    return reply.content
+
+chat("我叫小明")
+print(chat("我叫什么名字？"))  # → 你叫小明
 ```
+
+> 💡 需要**跨会话持久化**的记忆，建议使用 LangGraph 的 `checkpointer`（会话内）与 `store`（跨会话长期记忆），详见 [2.4 记忆机制](04-memory.md)。
 
 ### 5.2 自定义 Runnable
 

@@ -21,7 +21,7 @@
 │  │  1. 工作记忆 (Working Memory)                        │   │
 │  │  • 当前对话上下文                                     │   │
 │  │  • 内存中存储，容量有限                               │   │
-│  │  • 对应：LangChain ChatMessageHistory                 │   │
+│  │  • 对应：LangGraph checkpointer / 消息列表            │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                            │                                 │
 │                            ▼                                 │
@@ -29,7 +29,7 @@
 │  │  2. 短期记忆 (Short-term Memory)                     │   │
 │  │  • 最近对话摘要/关键信息                              │   │
 │  │  • 滑动窗口/摘要策略                                  │   │
-│  │  • 对应：LangChain ConversationSummaryMemory          │   │
+│  │  • 对应：SummarizationMiddleware / trim_messages      │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                            │                                 │
 │                            ▼                                 │
@@ -45,7 +45,7 @@
 │  │  4. 全局记忆 (Global/Episodic Memory)                │   │
 │  │  • Agent 学习到的通用知识                             │   │
 │  │  • 技能/经验/偏好                                     │   │
-│  │  • 高级特性：Hermes MemoryBank 三层系统                │   │
+│  │  • 对应：Mem0 / Letta / Zep / LangMem 等记忆框架       │   │
 │  └──────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -79,42 +79,44 @@
 
 ## 高级记忆架构
 
-### MemoryBank — 三层记忆系统
+### 记忆框架对比（2026）
 
-受人类记忆机制启发，Hermes Agent 的 MemoryBank 实现：
+当记忆需求变复杂（自动抽取、去重、遗忘、图谱化），推荐引入专门的记忆框架：
+
+| 框架 | 定位 | 特点 | 适合 |
+|------|------|------|------|
+| **LangGraph**（内置） | 会话 + 长期记忆 | `checkpointer` + `store` | LangChain 技术栈 |
+| **Mem0** | 通用记忆层 | 自动抽取/更新，向量 + 图 | 个性化 Agent |
+| **Letta**（原 MemGPT） | 记忆操作系统 | 记忆分页、长期自主 | 长时自主 Agent |
+| **Zep** | 对话记忆 | 时序知识图谱 | 客服 / 助手 |
+| **LangMem** | 记忆 SDK | 与 LangGraph 无缝集成 | LangChain 生态 |
+
+分层记忆的通用设计模式：
 
 ```python
-class MemoryBank:
-    def __init__(self):
-        self.working_memory = []       # 工作记忆：当前对话
-        self.short_term = []           # 短期记忆：最近 N 轮
-        self.long_term = VectorStore()  # 长期记忆：向量存储
-        
-    def add(self, experience: dict):
-        """添加经验到记忆"""
-        self.working_memory.append(experience)
-        
-        # 工作记忆 → 短期记忆
-        if len(self.working_memory) > 10:
-            self._consolidate_to_short_term()
-        
-        # 短期记忆 → 长期记忆（重要事件）
-        if self._is_important(experience):
-            self._consolidate_to_long_term(experience)
-    
+class LayeredMemory:
+    """工作记忆 → 短期记忆 → 长期记忆 的分层模式"""
+
+    def __init__(self, store):
+        self.working: list = []      # 当前任务
+        self.short_term: list = []   # 会话内（由 checkpointer 管理）
+        self.store = store           # 长期（向量 / KV）
+
+    def add(self, text: str, important: bool = False):
+        self.working.append(text)
+        if len(self.working) > 10:
+            self._consolidate()
+        if important:
+            self.store.put(("memory",), text[:32], {"text": text})
+
     def retrieve(self, query: str, k: int = 5) -> list:
-        """按相关性检索记忆"""
-        # 先查工作记忆
-        working_results = self._search_working(query)
-        
-        # 再查短期记忆（最近上下文）
-        short_results = self._search_short_term(query)
-        
-        # 最后查长期记忆（语义检索）
-        long_results = self.long_term.similarity_search(query, k=k)
-        
-        # 合并排序
-        return self._merge_results(working_results, short_results, long_results)
+        # 分层检索：工作 → 短期 → 长期
+        return self.store.search(("memory",), query=query, limit=k)
+
+    def _consolidate(self):
+        """把工作记忆收敛进短期记忆（可用 LLM 摘要）"""
+        self.short_term.append(self.working)
+        self.working = []
 ```
 
 ### Neo4j 图记忆 — 关系推理
@@ -187,9 +189,9 @@ def compress_memory(memories, llm):
 
 | 场景 | 推荐方案 | 理由 |
 |------|---------|------|
-| 简单对话 | LangChain ChatMessageHistory | 内存存储，够用 |
+| 简单对话 | LangGraph checkpointer（内存版） | 会话内记忆，够用 |
 | 客服系统 | Chroma + 短期摘要 | 快速检索常见问题 |
-| 个人助手 | MemoryBank 三层架构 | 长期学习用户偏好 |
+| 个人助手 | Mem0 / Letta + 长期记忆 | 长期学习用户偏好 |
 | 知识库问答 | Milvus + RAG | 海量文档检索 |
 | 金融分析 | Neo4j 图记忆 | 实体关系推理 |
 | 医疗诊断 | 混合：向量 + 图 + 规则 | 多维度知识 |

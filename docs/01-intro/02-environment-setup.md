@@ -12,8 +12,8 @@
 
 | 组件 | 版本要求 | 用途 |
 |------|----------|------|
-| Python | 3.10+（推荐 3.11/3.12） | Agent 开发语言 |
-| uv | 0.2+ | 超快速 Python 包管理器 |
+| Python | **3.12+** | Agent 开发语言 |
+| uv | **0.5+** | 超快速 Python 包管理器 |
 | Git | 2.0+ | 代码版本管理 |
 | VS Code | 最新版 | 代码编辑器（推荐） |
 | API Key | 有效 | 调用 LLM 服务 |
@@ -63,12 +63,12 @@ code --version
 # 安装 Homebrew（如果没有）
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# 安装 Python 3.11
-brew install python@3.11
+# 安装 Python 3.12
+brew install python@3.12
 
 # 验证
 python3 --version
-# 输出: Python 3.11.x
+# 输出: Python 3.12.x
 
 # 找到安装路径（后续 uv 可能需要）
 which python3
@@ -86,9 +86,9 @@ curl https://pyenv.run | bash
 export PATH="$HOME/.pyenv/bin:$PATH"
 eval "$(pyenv init -)"
 
-# 安装 Python 3.11
-pyenv install 3.11.8
-pyenv global 3.11.8
+# 安装 Python 3.12
+pyenv install 3.12.8
+pyenv global 3.12.8
 
 # 验证
 python --version
@@ -99,7 +99,7 @@ python --version
 **方法一：官网安装（推荐初学者）**
 
 1. 访问 [Python 官网下载页](https://www.python.org/downloads/)
-2. 点击 **Download Python 3.11.x**（不要下载 3.13，部分库兼容性可能有问题）
+2. 点击 **Download Python 3.12.x**（不要下载 3.13，部分库兼容性可能有问题）
 3. 运行安装程序
 4. **⚠️ 关键步骤**：务必勾选底部的 **"Add Python to PATH"**（见下图）
 5. 点击 **"Install Now"**
@@ -108,7 +108,7 @@ python --version
 ```cmd
 # 打开新命令提示符
 python --version
-# 输出: Python 3.11.x
+# 输出: Python 3.12.x
 
 pip --version
 # 输出: pip 23.x from ...
@@ -117,7 +117,7 @@ pip --version
 **方法二：Microsoft Store（替代方案）**
 
 1. 打开 Microsoft Store
-2. 搜索 "Python 3.11"
+2. 搜索 "Python 3.12"
 3. 选择由 Python Software Foundation 发布的版本
 4. 点击安装
 5. 验证同上
@@ -137,12 +137,12 @@ sudo apt install -y build-essential libssl-dev zlib1g-dev \
     libxmlsec1-dev libffi-dev liblzma-dev
 
 # 方法一：apt 直接安装（版本可能较旧）
-sudo apt install -y python3.11 python3.11-venv python3-pip
+sudo apt install -y python3.12 python3.12-venv python3-pip
 
 # 方法二：pyenv（推荐，可指定精确版本）
 curl https://pyenv.run | bash
-pyenv install 3.11.8
-pyenv global 3.11.8
+pyenv install 3.12.8
+pyenv global 3.12.8
 
 # 验证
 python3 --version
@@ -165,7 +165,7 @@ source ~/.zshrc    # 如果使用 zsh（macOS 默认）
 
 # 验证
 uv --version
-# 输出: uv 0.2.x (xxxxxxx 2024-xx-xx)
+# 输出: uv 0.5.x
 ```
 
 #### Windows
@@ -262,12 +262,12 @@ cd AgentLearn
 ```
 AgentLearn/
 ├── docs/                    # 教程文档
-│   ├── 01-intro/           # 第一章
-│   ├── 02-fundamentals/    # 第二章
+│   ├── 01-intro/            # 第一章
+│   ├── 02-fundamentals/     # 第二章
 │   └── ...
 ├── examples/               # 配套示例代码
 │   ├── 01-hello-agent/     # 第一个 Agent
-│   ├── 02-chat-agent/      # 聊天 Agent
+│   ├── 02-tool-use/        # 工具调用
 │   └── ...
 ├── pyproject.toml          # 项目依赖配置（uv 使用）
 ├── uv.lock                 # 依赖锁定文件
@@ -327,8 +327,11 @@ source .venv/bin/activate
 
 | 服务商 | 获取地址 | 说明 |
 |--------|----------|------|
-| **OpenAI** | https://platform.openai.com/api-keys | 官方，需海外支付方式 |
-| **国内代理** | 各种国内 API 代理服务 | 无需海外支付，价格实惠 |
+| **OpenAI** | https://platform.openai.com/api-keys | GPT-5.x 系列，官方，需海外支付 |
+| **Anthropic** | https://console.anthropic.com/ | Claude Opus 5 / Sonnet 4.6 |
+| **Google** | https://aistudio.google.com/ | Gemini 3 系列 |
+| **DeepSeek** | https://platform.deepseek.com/ | 国产，性价比极高 |
+| **通义千问** | https://dashscope.aliyun.com/ | 国产，企业友好 |
 
 > ⚠️ **建议**：国内开发者优先使用国内代理服务，网络延迟更低，支付更方便。
 
@@ -353,13 +356,13 @@ Copy-Item .env.example .env
 # LLM API 配置
 LLM_API_KEY=sk-your-api-key-here
 LLM_BASE_URL=https://api.example.com/v1
-LLM_MODEL_NAME=gpt-4o
+LLM_MODEL_NAME=gpt-5.5
 
-# 可选配置
-LANGCHAIN_TRACING_V2=false
-LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
-LANGCHAIN_API_KEY=your-langsmith-key
-LANGCHAIN_PROJECT=agent-guide
+# 可观测性（LangSmith，可选）
+LANGSMITH_TRACING=false
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+LANGSMITH_API_KEY=your-langsmith-key
+LANGSMITH_PROJECT=agentlearn
 ```
 
 > 🔐 **安全提醒**：`.env` 文件包含敏感信息，已自动被 `.gitignore` 排除，**不会提交到 Git**。
@@ -370,7 +373,7 @@ LANGCHAIN_PROJECT=agent-guide
 # 确保虚拟环境已激活
 python examples/01-hello-agent/check_env.py
 # 预期输出：
-# ✅ Python 版本: 3.11.x
+# ✅ Python 版本: 3.12.x
 # ✅ 环境变量已加载
 # ✅ API Key 存在 (sk-...xxxx)
 # ✅ 基础 URL: https://api.example.com/v1
@@ -437,7 +440,7 @@ python3 --version
 # 查看所有 Python
 which python3
 /usr/bin/python3        # 系统自带
-/opt/homebrew/bin/python3.11  # Homebrew 安装
+/opt/homebrew/bin/python3.12  # Homebrew 安装
 ~/.pyenv/shims/python   # pyenv 安装
 
 # 建议只保留一个，或使用 pyenv 统一管理
@@ -522,11 +525,11 @@ ssh-keygen -t ed25519 -C "your@email.com"
 ```bash
 # 1. 检查 Python
 python3 --version
-# ✅ Python 3.11.x
+# ✅ Python 3.12.x
 
 # 2. 检查 uv
 uv --version
-# ✅ uv 0.2.x
+# ✅ uv 0.5.x
 
 # 3. 检查 Git
 git --version
@@ -552,7 +555,7 @@ python -c "from dotenv import load_dotenv; import os; load_dotenv(); key=os.gete
 
 | 步骤 | 要做什么 | 验证命令 |
 |------|----------|----------|
-| 1️⃣ | 安装 Python 3.11+ | `python --version` |
+| 1️⃣ | 安装 Python 3.12+ | `python --version` |
 | 2️⃣ | 安装 uv 包管理器 | `uv --version` |
 | 3️⃣ | 安装 Git 并配置 | `git --version` && `git config --list` |
 | 4️⃣ | 克隆项目 | `git clone ...` |

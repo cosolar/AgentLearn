@@ -9,19 +9,22 @@
     <img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="License"/>
   </a>
   <a href="https://python.org">
-    <img src="https://img.shields.io/badge/python-3.10%2B-green.svg?style=flat-square" alt="Python"/>
+    <img src="https://img.shields.io/badge/python-3.12%2B-green.svg?style=flat-square" alt="Python"/>
   </a>
-  <a href="https://python.langchain.com">
-    <img src="https://img.shields.io/badge/langchain-v1.3%2B-orange.svg?style=flat-square" alt="LangChain"/>
+  <a href="https://docs.langchain.com/oss/python/langchain/overview">
+    <img src="https://img.shields.io/badge/langchain-v1.x-orange.svg?style=flat-square" alt="LangChain"/>
   </a>
-  <a href="https://langchain-ai.github.io/langgraph/">
-    <img src="https://img.shields.io/badge/langgraph-v1.2%2B-purple.svg?style=flat-square" alt="LangGraph"/>
+  <a href="https://docs.langchain.com/oss/python/langgraph/overview">
+    <img src="https://img.shields.io/badge/langgraph-v1.1%2B-purple.svg?style=flat-square" alt="LangGraph"/>
+  </a>
+  <a href="https://modelcontextprotocol.io">
+    <img src="https://img.shields.io/badge/MCP-2026--07--28-8A2BE2.svg?style=flat-square" alt="MCP"/>
   </a>
   <a href="https://gitcode.com/mininote/AgentLearn/stars">
     <img src="https://img.shields.io/badge/⭐-Star%20Us-brightgreen?style=flat-square" alt="Stars"/>
   </a>
   <a href="https://gitcode.com/mininote/AgentLearn">
-    <img src="https://img.shields.io/badge/📖-30%2B%20docs-ff69b4?style=flat-square" alt="Docs"/>
+    <img src="https://img.shields.io/badge/📖-55%2B%20docs-ff69b4?style=flat-square" alt="Docs"/>
   </a>
   <a href="https://agentlearn.minims.cn" target="_blank">
     <img src="https://img.shields.io/badge/🇨🇳-国内访问-blue?style=flat-square" alt="国内访问"/>
@@ -38,20 +41,20 @@
 >
 > 🌐 **国内访问**：[https://al.towao.com](https://al.towao.com)
 
-AgentLearn 是当前最系统的开源 AI Agent 教程之一，专为 **2026 年技术栈** 打造。无论你是 AI 新手还是资深后端开发者，都可以在这里找到适合自己的成长路径。
+AgentLearn 是当前最系统的开源 AI Agent 教程之一，内容同步至 **2026 年 9 月** 的最新技术栈。无论你是 AI 新手还是资深后端开发者，都可以在这里找到适合自己的成长路径。
 
-🔹 **你将从「是什么」开始**：理解 Agent、Chain、Tool、Memory、RAG 的核心概念  
-🔹 **接着「动手做」**：基于 LangChain + LangGraph 搭建真实可运行的 Agent 应用  
-🔹 **最终「上生产」**：掌握多 Agent 协作、性能调优、安全防护与生产部署
+🔹 **你将从「是什么」开始**：理解 Agent、Chain、Tool、Memory、RAG、MCP 的核心概念  
+🔹 **接着「动手做」**：基于 LangChain v1 + LangGraph v1.1 搭建真实可运行的 Agent 应用  
+🔹 **最终「上生产」**：掌握多 Agent 协作、上下文工程、性能调优、安全防护与生产部署
 
 ```
 🤖 AgentLearn 学习路径：
-  基础概念 → LangChain 实战 → LangGraph 工作流 → RAG 系统 → 生产部署
+  基础概念 → LangChain v1 实战 → LangGraph 工作流 → RAG 系统 → 协议与生态 → 生产部署
 ```
 
-本项目配套完整的 Python 包 [`agentlearn`](src/agentlearn/) 和 **10+ 个实战项目**，代码即学即用。无论你想构建聊天机器人、自动化工作流、知识库问答系统还是多智能体协作平台，这里都有现成的模板和最佳实践。
+本项目配套完整的 Python 包 [`agentlearn`](src/agentlearn/) 和 **12+ 个实战项目**，代码即学即用。无论你想构建聊天机器人、自动化工作流、知识库问答系统还是多智能体协作平台，这里都有现成的模板和最佳实践。
 
-**已有 30+ 篇教程、~60 小时学习内容，全部免费开源。** 🚀
+**已有 55+ 篇教程、~80 小时学习内容，全部免费开源。** 🚀
 
 ---
 
@@ -63,12 +66,13 @@ AgentLearn 是当前最系统的开源 AI Agent 教程之一，专为 **2026 年
 
 | 指标 | 数据 |
 |:-----|:-----|
-| 📚 教程章节 | **8 大章节** · 30+ 篇文档 |
-| ⏱️ 总学习时长 | **~60 小时** |
-| 💻 可运行示例 | **10+ 个**实战项目 |
-| 📦 源代码包 | **agentlearn** v1.0.0 |
-| 🐍 最低 Python | **3.10+** |
-| 📝 最后更新 | 2026 年 |
+| 📚 教程章节 | **8 大章节** · 55+ 篇文档 |
+| ⏱️ 总学习时长 | **~80 小时** |
+| 💻 可运行示例 | **12+ 个**实战项目 |
+| 📦 源代码包 | **agentlearn** v1.0+ |
+| 🐍 最低 Python | **3.12+** |
+| 🧠 核心框架 | **LangChain v1** + **LangGraph v1.1** |
+| 📝 最后更新 | **2026 年 9 月** |
 
 </td>
 <td width="50%" valign="top">
@@ -80,9 +84,9 @@ AgentLearn 是当前最系统的开源 AI Agent 教程之一，专为 **2026 年
 | 🎯 **从零开始** | 无需 AI 基础，手把手教学 |
 | 📚 **系统全面** | 覆盖 Agent 开发全链路 |
 | 💻 **实战驱动** | 每个知识点都有可运行代码示例 |
-| 🛠️ **技术前沿** | LangChain + LangGraph 最新实践 |
+| 🛠️ **技术前沿** | LangChain v1 中间件 / LangGraph 1.1 / MCP 2026-07-28 |
 | 📦 **工程规范** | 使用 `uv` 管理，符合生产标准 |
-| 🌐 **生态全景** | 涵盖 2026 年主流框架与选型 |
+| 🌐 **生态全景** | 涵盖 2026 年主流框架、协议与选型 |
 
 </td>
 </tr>
@@ -97,13 +101,13 @@ AgentLearn 是当前最系统的开源 AI Agent 教程之一，专为 **2026 年
 | 章节 | 内容 | 适合人群 |
 |:----|:-----|:---------|
 | [🟢 入门基础](#-第一部分入门基础-01-intro) | AI Agent 概念、环境搭建、第一个 Agent | 新手 |
-| [🔵 核心概念](#-第二部分核心概念-02-fundamentals) | Prompt 工程、Chain、Agent 架构、记忆 | 新手 |
-| [🟠 LangChain 实战](#-第三部分langchain-实战-03-langchain) | 组件、工具调用、向量存储、聊天 Agent | 进阶 |
-| [🟣 LangGraph 进阶](#-第四部分langgraph-进阶-04-langgraph) | 状态管理、路由、子图、工作流 | 进阶 |
-| [🟤 RAG 系统](#-第五部分rag-系统-05-rag) | 文档处理、向量数据库、企业知识库 | 进阶 |
+| [🔵 核心概念](#-第二部分核心概念-02-fundamentals) | Prompt 与上下文工程、Chain、Agent 架构、记忆 | 新手 |
+| [🟠 LangChain v1 实战](#-第三部分langchain-v1-实战-03-langchain) | create_agent、中间件、工具调用、向量存储 | 进阶 |
+| [🟣 LangGraph 进阶](#-第四部分langgraph-进阶-04-langgraph) | 状态管理、路由、子图、持久化、人机协同 | 进阶 |
+| [🟤 RAG 系统](#-第五部分rag-系统-05-rag) | 文档处理、向量数据库、Agentic RAG、GraphRAG | 进阶 |
 | [🔴 高级主题](#-第六部分高级主题-06-advanced) | 多 Agent、评估、成本控制、安全 | 高级 |
-| [⚫ 生产部署](#-第七部分生产部署-07-deployment) | API 封装、Docker、监控、CI/CD | 高级 |
-| [🌟 生态全景](#-第八部分生态全景-08-ecosystem) | 框架对比、多智能体、工具生态、选型 | 所有 |
+| [⚫ 生产部署](#-第七部分生产部署-07-deployment) | API 封装、Docker、可观测性、CI/CD | 高级 |
+| [🌟 生态全景](#-第八部分生态全景-08-ecosystem) | 框架对比、MCP/A2A 协议、工具生态、选型 | 所有 |
 
 ---
 
@@ -116,12 +120,12 @@ AgentLearn 是当前最系统的开源 AI Agent 教程之一，专为 **2026 年
 | # | 技能 | 对应章节 |
 |:-|:-----|:---------|
 | ✅ | 理解 AI Agent 的核心概念与工作原理 | 第一部分 |
-| ✅ | 熟练使用 LangChain 构建基础 Agent | 第二、三部分 |
-| ✅ | 掌握 LangGraph 设计复杂工作流 | 第四部分 |
+| ✅ | 熟练使用 LangChain v1 构建生产级 Agent | 第二、三部分 |
+| ✅ | 掌握 LangGraph 设计复杂工作流（持久化/人机协同） | 第四部分 |
 | ✅ | 实现 RAG 系统，让 Agent 拥有知识库 | 第五部分 |
-| ✅ | 构建多 Agent 协作系统 | 第六部分 |
-| ✅ | 将 Agent 部署到生产环境 | 第七部分 |
-| ✅ | 了解 2026 年 AI Agent 全生态，做出最优选型 | 第八部分 |
+| ✅ | 构建多 Agent 协作系统并做好评测与成本控制 | 第六部分 |
+| ✅ | 将 Agent 部署到生产环境并接入可观测性 | 第七部分 |
+| ✅ | 掌握 MCP / A2A 协议，融入 2026 年 Agent 生态 | 第八部分 |
 
 </div>
 
@@ -141,30 +145,30 @@ AgentLearn 是当前最系统的开源 AI Agent 教程之一，专为 **2026 年
 
 ### 🔵 第二部分：核心概念 (02-fundamentals)
 
-> 深入理解 LLM、Prompt 工程、Chain 模式、Agent 架构和记忆机制。
+> 深入理解 LLM、Prompt 与上下文工程、Chain 模式、Agent 架构和记忆机制。
 
 | 章节 | 内容 | 预计时间 |
 |:----|:-----|:---------|
-| 2.1 | [LLM 基础与 Prompt 工程](docs/02-fundamentals/01-prompt-engineering.md) | 3 小时 |
+| 2.1 | [Prompt 工程与上下文工程](docs/02-fundamentals/01-prompt-engineering.md) | 3 小时 |
 | 2.2 | [Chain 模式详解](docs/02-fundamentals/02-chain-pattern.md) | 2 小时 |
 | 2.3 | [Agent 核心架构](docs/02-fundamentals/03-agent-architecture.md) | 3 小时 |
 | 2.4 | [记忆机制](docs/02-fundamentals/04-memory.md) | 2 小时 |
 
-### 🟠 第三部分：LangChain 实战 (03-langchain)
+### 🟠 第三部分：LangChain v1 实战 (03-langchain)
 
-> 掌握 LangChain 核心组件，实现工具调用、向量存储和聊天 Agent。
+> 掌握 LangChain v1（create_agent / 中间件 / 内容块）核心能力，实现工具调用与聊天 Agent。
 
 | 章节 | 内容 | 预计时间 |
 |:----|:-----|:---------|
-| 3.1 | [LangChain 核心组件](docs/03-langchain/01-core-components.md) | 2 小时 |
-| 3.2 | [工具调用 (Tool Use)](docs/03-langchain/02-tool-use.md) | 3 小时 |
+| 3.1 | [LangChain v1 核心组件](docs/03-langchain/01-core-components.md) | 2 小时 |
+| 3.2 | [模型调用与工具集成](docs/03-langchain/02-models-and-tools.md) | 3 小时 |
 | 3.3 | [向量存储与检索](docs/03-langchain/03-vector-store.md) | 3 小时 |
 | 3.4 | [构建聊天 Agent](docs/03-langchain/04-chat-agent.md) | 2 小时 |
 | 3.5 | [实战：研究助手](docs/03-langchain/05-research-agent.md) | 4 小时 |
 
 ### 🟣 第四部分：LangGraph 进阶 (04-langgraph)
 
-> 学习 LangGraph 工作流引擎，掌握状态管理、条件路由和子图。
+> 学习 LangGraph 工作流引擎，掌握状态管理、条件路由、子图、持久化与人机协同。
 
 | 章节 | 内容 | 预计时间 |
 |:----|:-----|:---------|
@@ -199,18 +203,18 @@ AgentLearn 是当前最系统的开源 AI Agent 教程之一，专为 **2026 年
 
 ### ⚫ 第七部分：生产部署 (07-deployment)
 
-> 将 Agent 应用部署到生产环境，实现容器化、监控和持续集成。
+> 将 Agent 应用部署到生产环境，实现容器化、可观测性和持续集成。
 
 | 章节 | 内容 | 预计时间 |
 |:----|:-----|:---------|
 | 7.1 | [API 服务封装](docs/07-deployment/01-api-service.md) | 2 小时 |
 | 7.2 | [Docker 容器化](docs/07-deployment/02-docker.md) | 2 小时 |
-| 7.3 | [监控与日志](docs/07-deployment/03-monitoring.md) | 2 小时 |
+| 7.3 | [可观测性、监控与日志](docs/07-deployment/03-monitoring.md) | 2 小时 |
 | 7.4 | [持续集成/部署](docs/07-deployment/04-cicd.md) | 2 小时 |
 
 ### 🌟 第八部分：生态全景 (08-ecosystem)
 
-> 俯瞰 2026 年 AI Agent 全生态，从框架对比到领域实践，做出最优选型。
+> 俯瞰 2026 年 AI Agent 全生态，从框架对比到协议标准，做出最优选型。
 
 | 章节 | 内容 | 预计时间 |
 |:----|:-----|:---------|
@@ -223,7 +227,10 @@ AgentLearn 是当前最系统的开源 AI Agent 教程之一，专为 **2026 年
 | 8.7 | [评估与监控工具](docs/08-ecosystem/survey/07-evaluation-tools.md) | 1.5 小时 |
 | 8.8 | [安全与沙箱](docs/08-ecosystem/survey/08-security-sandbox.md) | 1.5 小时 |
 | 8.9 | [选型指南与决策矩阵](docs/08-ecosystem/survey/09-selection-guide.md) | 2 小时 |
+| 8.10 | [MCP 协议完全指南](docs/08-ecosystem/protocols/01-mcp.md) | 2 小时 |
+| 8.11 | [A2A 协议与 Agent 互操作](docs/08-ecosystem/protocols/02-a2a.md) | 1.5 小时 |
 | 📦 **HiClaw 实践** | [HiClaw 教程](docs/08-ecosystem/hiclaw/README.md) — Kubernetes 原生多 Agent 编排系统 | 专题 |
+| 🧩 **AgentScope 实战** | [AgentScope 教程](docs/08-ecosystem/agentscope/index.md) — 消息驱动的分布式 Agent 框架 | 专题 |
 
 ---
 
@@ -233,9 +240,9 @@ AgentLearn 是当前最系统的开源 AI Agent 教程之一，专为 **2026 年
 
 | 要求 | 说明 |
 |:----|:-----|
-| 🐍 Python | **3.10+** |
+| 🐍 Python | **3.12+** |
 | 📦 包管理器 | **uv** >= 0.5.0 |
-| 🔑 API Key | **OpenAI** 或其他 LLM API |
+| 🔑 API Key | **OpenAI / Anthropic / 通义 / DeepSeek** 等任一 LLM API |
 
 ### 📥 安装 uv
 
@@ -273,7 +280,9 @@ uv sync
 cp .env.example .env
 
 # 编辑 .env 文件，填入你的 API Key
-# OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxx
+# LLM_API_KEY=sk-xxxxxxxxxxxxxxxxxxxx
+# LLM_BASE_URL=https://api.openai.com/v1
+# LLM_MODEL_NAME=gpt-5.5
 ```
 
 ### 🎮 运行示例
@@ -303,18 +312,21 @@ AgentLearn/
 │   ├── LICENSE                      # MIT 许可证
 │   ├── pyproject.toml               # 项目配置 (uv)
 │   ├── uv.lock                      # 依赖锁定文件
-│   ├── .env.example                 # 环境变量模板
-│   └── .gitignore
+│   └── .env.example                 # 环境变量模板
 │
 ├── 📚 教程文档 (docs/)
 │   ├── 01-intro/               # 🟢 入门基础 (3 篇)
 │   ├── 02-fundamentals/        # 🔵 核心概念 (4 篇)
-│   ├── 03-langchain/           # 🟠 LangChain 实战 (5 篇)
+│   ├── 03-langchain/           # 🟠 LangChain v1 实战 (5 篇)
 │   ├── 04-langgraph/           # 🟣 LangGraph 进阶 (5 篇)
 │   ├── 05-rag/                 # 🟤 RAG 系统 (5 篇)
 │   ├── 06-advanced/            # 🔴 高级主题 (4 篇)
 │   ├── 07-deployment/          # ⚫ 生产部署 (4 篇)
-│   └── 08-ecosystem/           # 🌟 生态全景 (9 篇)
+│   └── 08-ecosystem/           # 🌟 生态全景 (11 篇 + HiClaw + AgentScope)
+│       ├── survey/             # 生态调研
+│       ├── protocols/          # MCP / A2A 协议
+│       ├── hiclaw/             # HiClaw 实践
+│       └── agentscope/         # AgentScope 实战
 │
 ├── 💻 代码示例 (examples/)
 │   ├── 01-hello-agent/         # 🖐️ 第一个 Agent
@@ -322,24 +334,19 @@ AgentLearn/
 │   ├── 03-chat-agent/          # 💬 聊天 Agent
 │   ├── 04-research-agent/      # 🔬 研究助手
 │   ├── 05-streamlit-chat/      # 🎨 Streamlit 聊天界面
-│   ├── 06-multi-agent/         # 👥 多 Agent 协作
+│   └── 06-multi-agent/         # 👥 多 Agent 协作
 │
 ├── 📦 核心库 (src/agentlearn/)
-│   ├── base.py                  # 基础类
-│   ├── agent.py                 # Agent 实现
-│   ├── tools.py                 # 工具集合
-│   ├── memory.py                # 记忆管理
-│   ├── message.py               # 消息模型
-│   ├── pipeline.py              # 流水线编排
-│   └── utils.py                 # 工具函数
+│   ├── base.py                 # 基础类
+│   ├── agent.py                # Agent 实现
+│   ├── tools.py                # 工具集合
+│   ├── memory.py               # 记忆管理
+│   ├── message.py              # 消息模型
+│   ├── pipeline.py             # 流水线编排
+│   └── utils.py                # 工具函数
 │
 ├── 🧪 测试 (tests/)
-│   ├── test_agent.py
-│   └── test_tools.py
-│
 └── 🔧 辅助脚本 (scripts/)
-    ├── setup.sh                 # 环境设置
-    └── deploy.sh                # 部署脚本
 ```
 
 </details>
@@ -348,16 +355,20 @@ AgentLearn/
 
 ## 🛠️ 技术栈
 
-| 类别 | 技术 | 版本 |
+> 以下版本以 **2026 年 9 月** 为准，实际请以各官方最新发布为准。
+
+| 类别 | 技术 | 版本 / 说明 |
 |:----|:-----|:-----|
 | 📦 **包管理** | [uv](https://docs.astral.sh/uv/) | >= 0.5.0 |
-| 🐍 **语言** | [Python](https://python.org) | >= 3.10 |
-| 🧠 **核心框架** | [LangChain](https://python.langchain.com/) | >= 1.3.1 |
-| 🔄 **工作流** | [LangGraph](https://langchain-ai.github.io/langgraph/) | >= 1.2.1 |
-| 🗄️ **向量数据库** | Chroma / FAISS / Qdrant | >= 1.5.0 |
-| 🤖 **LLM** | OpenAI GPT-4o / Anthropic Claude 3.5 / DeepSeek | - |
+| 🐍 **语言** | [Python](https://python.org) | >= 3.12 |
+| 🧠 **核心框架** | [LangChain](https://docs.langchain.com/oss/python/langchain/overview) | v1.x（`create_agent` / 中间件 / 内容块） |
+| 🔄 **工作流** | [LangGraph](https://docs.langchain.com/oss/python/langgraph/overview) | >= 1.1 |
+| 🔌 **工具协议** | [MCP](https://modelcontextprotocol.io) / A2A | MCP 2026-07-28 / A2A v1.0 |
+| 🗄️ **向量数据库** | Chroma / FAISS / Qdrant / Milvus | >= 1.5.0 |
+| 🤖 **LLM** | OpenAI GPT-5.x · Claude Sonnet 4.6 / Opus 5 · Gemini 3.x · DeepSeek V4 · Qwen | - |
 | 🐳 **部署** | Docker / FastAPI / Streamlit | - |
-| ✅ **代码质量** | Black + Ruff + Mypy + Pytest | - |
+| 🔭 **可观测性** | LangSmith / Langfuse / OpenTelemetry | - |
+| ✅ **代码质量** | Ruff + Mypy + Pytest | - |
 
 ---
 
@@ -375,20 +386,20 @@ AgentLearn/
 │  └── 运行第一个 Agent 🖐️                                     │
 ├─────────────────────────────────────────────────────────────┤
 │  Week 3-4: 🔵🟠 核心技能                                      │
-│  ├── 掌握 LangChain 核心组件                                  │
-│  ├── 精通 Prompt 工程                                        │
+│  ├── 掌握 LangChain v1 核心组件与中间件                        │
+│  ├── 精通 Prompt 与上下文工程                                 │
 │  ├── 实现工具调用与记忆                                       │
 │  └── 构建聊天 Agent 💬                                       │
 ├─────────────────────────────────────────────────────────────┤
 │  Week 5-6: 🟣🟤 进阶实战                                      │
-│  ├── 学习 LangGraph 工作流                                    │
-│  ├── 构建 RAG 知识库系统                                      │
+│  ├── 学习 LangGraph 工作流与持久化                             │
+│  ├── 构建 RAG / Agentic RAG 知识库系统                        │
 │  └── 多 Agent 协作实战 👥                                    │
 ├─────────────────────────────────────────────────────────────┤
 │  Week 7-8: ⚫🌟 生产部署 + 生态全景                             │
 │  ├── API 封装与 Docker 部署 🐳                                │
-│  ├── 了解全生态框架与选型                                      │
-│  ├── 监控、评估与安全 ⚡                                      │
+│  ├── 了解全生态框架、MCP/A2A 协议与选型                        │
+│  ├── 可观测性、评估与安全 ⚡                                   │
 │  └── 完成最终项目 🏆                                         │
 └─────────────────────────────────────────────────────────────┘
 
@@ -418,11 +429,11 @@ graph LR
 
 | 规范 | 要求 |
 |:----|:-----|
-| 📦 **依赖管理** | 使用 `uv`，不可用 pip |
-| ✨ **代码风格** | 遵循 PEP 8，使用 Black 格式化 |
+| 📦 **依赖管理** | 使用 `uv` 管理依赖 |
+| ✨ **代码风格** | 遵循 PEP 8，使用 Ruff 格式化与检查 |
 | 📝 **文档** | 函数/类添加类型注解和文档字符串 |
 | 🧪 **测试** | 新功能必须包含单元测试 |
-| 🔍 **类型检查** | 通过 Mypy strict 模式 |
+| 🔍 **类型检查** | 通过 Mypy 检查 |
 
 ---
 
@@ -440,12 +451,12 @@ graph LR
 
 <div>
 
-| 🧠 核心框架 | 🌐 平台工具 | 📖 学习资料 |
+| 🧠 核心框架 | 🔌 协议标准 | 🌐 平台工具 |
 |:-----------|:-----------|:-----------|
-| [LangChain](https://python.langchain.com/) | [Dify](https://dify.ai/) | [LangChain 官方教程](https://python.langchain.com/docs/tutorials/) |
-| [LangGraph](https://langchain-ai.github.io/langgraph/) | [AgentScope](https://agentscope.io/) | [LangGraph 官方指南](https://langchain-ai.github.io/langgraph/tutorials/) |
-| [AutoGen](https://microsoft.github.io/autogen/) | [Flowise](https://flowiseai.com/) | [OpenAI Cookbook](https://cookbook.openai.com/) |
-| [CrewAI](https://docs.crewai.com/) | [LangSmith](https://smith.langchain.com/) | [DeepLearning.AI](https://www.deeplearning.ai/short-courses/) |
+| [LangChain](https://docs.langchain.com/oss/python/langchain/overview) | [MCP](https://modelcontextprotocol.io) | [Dify](https://dify.ai/) |
+| [LangGraph](https://docs.langchain.com/oss/python/langgraph/overview) | [A2A](https://a2aproject.github.io/A2A/) | [Flowise](https://flowiseai.com/) |
+| [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) | [OpenTelemetry GenAI](https://opentelemetry.io/) | [LangSmith](https://smith.langchain.com/) |
+| [Microsoft Agent Framework](https://learn.microsoft.com/agent-framework/) | [JSON-RPC](https://www.jsonrpc.org/) | [Langfuse](https://langfuse.com/) |
 
 </div>
 
@@ -470,11 +481,12 @@ graph LR
 
 | 项目 | 用途 | 链接 |
 |:----|:----|:-----|
-| [LangChain](https://github.com/langchain-ai/langchain) | 核心 Agent 框架 | ⭐ 100k+ |
-| [LangGraph](https://github.com/langchain-ai/langgraph) | 工作流编排 | ⭐ 15k+ |
-| [AutoGen](https://github.com/microsoft/autogen) | 多 Agent 框架 | ⭐ 40k+ |
-| [CrewAI](https://github.com/joaomdmoura/crewAI) | 多 Agent 协作 | ⭐ 30k+ |
-| [AgentScope](https://github.com/alibaba/agentscope) | 分布式 Agent | ⭐ 10k+ |
+| [LangChain](https://github.com/langchain-ai/langchain) | 核心 Agent 框架 | ⭐ 110k+ |
+| [LangGraph](https://github.com/langchain-ai/langgraph) | 工作流编排运行时 | ⭐ 20k+ |
+| [MCP](https://github.com/modelcontextprotocol) | 工具调用协议 | ⭐ 60k+ |
+| [OpenAI Agents SDK](https://github.com/openai/openai-agents-python) | 轻量 Agent 框架 | ⭐ 15k+ |
+| [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) | 企业级 Agent 框架 | ⭐ 20k+ |
+| [AgentScope](https://github.com/agentscope-ai/agentscope) | 消息驱动分布式 Agent | ⭐ 10k+ |
 | [Dify](https://github.com/langgenius/dify) | LLMOps 平台 | ⭐ 60k+ |
 | [uv](https://github.com/astral-sh/uv) | Python 包管理 | ⭐ 40k+ |
 

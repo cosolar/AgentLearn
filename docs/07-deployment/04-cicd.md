@@ -429,14 +429,14 @@ environments:
     protection_rules: []
     deployment_branch: develop
     variables:
-      LLM_MODEL_NAME: gpt-4o-mini
+      LLM_MODEL_NAME: gpt-5-mini
       LOG_LEVEL: debug
 
   - name: staging
     protection_rules: []
     deployment_branch: main
     variables:
-      LLM_MODEL_NAME: gpt-4o-mini
+      LLM_MODEL_NAME: gpt-5-mini
       LOG_LEVEL: info
 
   - name: production
@@ -445,7 +445,7 @@ environments:
       - wait_timer: 5          # 5 分钟等待期
     deployment_branch: main
     variables:
-      LLM_MODEL_NAME: gpt-4o
+      LLM_MODEL_NAME: gpt-5.5
       LOG_LEVEL: warning
       ENABLE_MONITORING: true
 ```
