@@ -86,3 +86,17 @@
     * [8.3.10 部署](08-ecosystem/agentscope/deploy/agent-service.md)
     * [8.3.11 常见问题](08-ecosystem/agentscope/others/faq.md)
     * [更新日志](08-ecosystem/agentscope/change-log.md)
+
+* 🛠️ **第九部分：Agent Harness（驾驭工程）**
+  * [9.0 章节导读](09-agent-harness/README.md)
+  * [9.1 什么是 Agent Harness](09-agent-harness/01-intro.md)
+  * [9.2 Harness 十二大模块解剖](09-agent-harness/02-anatomy.md)
+  * [9.3 上下文工程与压缩流水线](09-agent-harness/03-context-engineering.md)
+  * [9.4 权限、护栏与沙箱](09-agent-harness/04-permissions-sandbox.md)
+  * [9.5 验证循环](09-agent-harness/05-verification.md)
+  * [9.6 子 Agent 编排与长时任务](09-agent-harness/06-subagents-longtasks.md)
+  * [9.7 Harness Engineering 方法论](09-agent-harness/07-harness-engineering.md)
+  * [9.8 实战：从零构建最小可行 Harness](09-agent-harness/08-build-your-harness.md)
+  * [9.9 开源 Harness 全景与选型](09-agent-harness/09-open-source-landscape.md)
+  * [9.10 AGENTS.md、Skills 与 Spec 驱动开发](09-agent-harness/10-standards-skills.md)
+  * [9.11 Harness 评测与可观测性](09-agent-harness/11-evaluation-observability.md)

@@ -24,7 +24,7 @@
     <img src="https://img.shields.io/badge/⭐-Star%20Us-brightgreen?style=flat-square" alt="Stars"/>
   </a>
   <a href="https://gitcode.com/mininote/AgentLearn">
-    <img src="https://img.shields.io/badge/📖-55%2B%20docs-ff69b4?style=flat-square" alt="Docs"/>
+    <img src="https://img.shields.io/badge/📖-65%2B%20docs-ff69b4?style=flat-square" alt="Docs"/>
   </a>
   <a href="https://agentlearn.minims.cn" target="_blank">
     <img src="https://img.shields.io/badge/🇨🇳-国内访问-blue?style=flat-square" alt="国内访问"/>
@@ -54,7 +54,7 @@ AgentLearn 是当前最系统的开源 AI Agent 教程之一，内容同步至 *
 
 本项目配套完整的 Python 包 [`agentlearn`](src/agentlearn/) 和 **12+ 个实战项目**，代码即学即用。无论你想构建聊天机器人、自动化工作流、知识库问答系统还是多智能体协作平台，这里都有现成的模板和最佳实践。
 
-**已有 55+ 篇教程、~80 小时学习内容，全部免费开源。** 🚀
+**已有 65+ 篇教程、~90 小时学习内容，全部免费开源。** 🚀
 
 ---
 
@@ -66,8 +66,8 @@ AgentLearn 是当前最系统的开源 AI Agent 教程之一，内容同步至 *
 
 | 指标 | 数据 |
 |:-----|:-----|
-| 📚 教程章节 | **8 大章节** · 55+ 篇文档 |
-| ⏱️ 总学习时长 | **~80 小时** |
+| 📚 教程章节 | **9 大章节** · 65+ 篇文档 |
+| ⏱️ 总学习时长 | **~90 小时** |
 | 💻 可运行示例 | **12+ 个**实战项目 |
 | 📦 源代码包 | **agentlearn** v1.0+ |
 | 🐍 最低 Python | **3.12+** |
@@ -108,6 +108,7 @@ AgentLearn 是当前最系统的开源 AI Agent 教程之一，内容同步至 *
 | [🔴 高级主题](#-第六部分高级主题-06-advanced) | 多 Agent、评估、成本控制、安全 | 高级 |
 | [⚫ 生产部署](#-第七部分生产部署-07-deployment) | API 封装、Docker、可观测性、CI/CD | 高级 |
 | [🌟 生态全景](#-第八部分生态全景-08-ecosystem) | 框架对比、MCP/A2A 协议、工具生态、选型 | 所有 |
+| [🛠️ Agent Harness](#-第九部分agent-harness驾驭工程-09-agent-harness) | Agent=Model+Harness、十二大模块、权限沙箱、验证循环、实战 | 高级 |
 
 ---
 
@@ -126,6 +127,7 @@ AgentLearn 是当前最系统的开源 AI Agent 教程之一，内容同步至 *
 | ✅ | 构建多 Agent 协作系统并做好评测与成本控制 | 第六部分 |
 | ✅ | 将 Agent 部署到生产环境并接入可观测性 | 第七部分 |
 | ✅ | 掌握 MCP / A2A 协议，融入 2026 年 Agent 生态 | 第八部分 |
+| ✅ | 掌握 Agent Harness 工程，构建可托付的生产级 Agent | 第九部分 |
 
 </div>
 
@@ -232,6 +234,25 @@ AgentLearn 是当前最系统的开源 AI Agent 教程之一，内容同步至 *
 | 📦 **HiClaw 实践** | [HiClaw 教程](docs/08-ecosystem/hiclaw/README.md) — Kubernetes 原生多 Agent 编排系统 | 专题 |
 | 🧩 **AgentScope 实战** | [AgentScope 教程](docs/08-ecosystem/agentscope/index.md) — 消息驱动的分布式 Agent 框架 | 专题 |
 
+### 🛠️ 第九部分：Agent Harness（驾驭工程）(09-agent-harness)
+
+> 🚀 **2026 年的认知升级：`Agent = Model + Harness`** —— 当模型不再是瓶颈，Harness 就是护城河。
+
+| 章节 | 内容 | 预计时间 |
+|:----|:-----|:---------|
+| 9.0 | [章节导读](docs/09-agent-harness/README.md) | — |
+| 9.1 | [什么是 Agent Harness](docs/09-agent-harness/01-intro.md) | 1.5 小时 |
+| 9.2 | [Harness 十二大模块解剖](docs/09-agent-harness/02-anatomy.md) | 3 小时 |
+| 9.3 | [上下文工程与压缩流水线](docs/09-agent-harness/03-context-engineering.md) | 2.5 小时 |
+| 9.4 | [权限、护栏与沙箱](docs/09-agent-harness/04-permissions-sandbox.md) | 2.5 小时 |
+| 9.5 | [验证循环](docs/09-agent-harness/05-verification.md) | 2 小时 |
+| 9.6 | [子 Agent 编排与长时任务](docs/09-agent-harness/06-subagents-longtasks.md) | 2.5 小时 |
+| 9.7 | [Harness Engineering 方法论](docs/09-agent-harness/07-harness-engineering.md) | 2.5 小时 |
+| 9.8 | [实战：从零构建最小可行 Harness](docs/09-agent-harness/08-build-your-harness.md) | 4 小时 |
+| 9.9 | [开源 Harness 全景与选型](docs/09-agent-harness/09-open-source-landscape.md) | 2 小时 |
+| 9.10 | [AGENTS.md、Agent Skills 与 Spec 驱动开发](docs/09-agent-harness/10-standards-skills.md) | 2 小时 |
+| 9.11 | [Harness 评测与可观测性](docs/09-agent-harness/11-evaluation-observability.md) | 2 小时 |
+
 ---
 
 ## 🚀 快速开始
@@ -304,6 +325,9 @@ python examples/04-research-agent/main.py
 
 # 💬 Streamlit 聊天界面 — 交互式对话
 streamlit run examples/05-streamlit-chat/main.py
+
+# 🧰 最小可行 Harness（mini-harness）— 离线自检，无需 API Key
+python examples/09-mini-harness/smoke_test.py
 ```
 
 ### 📖 本地运行文档网站（可选）
@@ -357,11 +381,12 @@ AgentLearn/
 │   ├── 05-rag/                 # 🟤 RAG 系统 (5 篇)
 │   ├── 06-advanced/            # 🔴 高级主题 (4 篇)
 │   ├── 07-deployment/          # ⚫ 生产部署 (4 篇)
-│   └── 08-ecosystem/           # 🌟 生态全景 (11 篇 + HiClaw + AgentScope)
-│       ├── survey/             # 生态调研
-│       ├── protocols/          # MCP / A2A 协议
-│       ├── hiclaw/             # HiClaw 实践
-│       └── agentscope/         # AgentScope 实战
+│   ├── 08-ecosystem/           # 🌟 生态全景 (11 篇 + HiClaw + AgentScope)
+│   │   ├── survey/             # 生态调研
+│   │   ├── protocols/          # MCP / A2A 协议
+│   │   ├── hiclaw/             # HiClaw 实践
+│   │   └── agentscope/         # AgentScope 实战
+│   └── 09-agent-harness/       # 🛠️ Agent Harness (12 篇)
 │
 ├── 💻 代码示例 (examples/)
 │   ├── 01-hello-agent/         # 🖐️ 第一个 Agent
@@ -369,7 +394,8 @@ AgentLearn/
 │   ├── 03-chat-agent/          # 💬 聊天 Agent
 │   ├── 04-research-agent/      # 🔬 研究助手
 │   ├── 05-streamlit-chat/      # 🎨 Streamlit 聊天界面
-│   └── 06-multi-agent/         # 👥 多 Agent 协作
+│   ├── 06-multi-agent/         # 👥 多 Agent 协作
+│   └── 09-mini-harness/        # 🧰 最小可行 Harness（可离线自检）
 │
 ├── 📦 核心库 (src/agentlearn/)
 │   ├── base.py                 # 基础类
@@ -413,7 +439,7 @@ AgentLearn/
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                  8 周完整学习路线 🗺️                         │
+│                 10 周完整学习路线 🗺️                         │
 ├─────────────────────────────────────────────────────────────┤
 │  Week 1-2: 🟢 入门基础                                       │
 │  ├── 理解 AI Agent 概念                                       │
@@ -436,6 +462,12 @@ AgentLearn/
 │  ├── 了解全生态框架、MCP/A2A 协议与选型                        │
 │  ├── 可观测性、评估与安全 ⚡                                   │
 │  └── 完成最终项目 🏆                                         │
+├─────────────────────────────────────────────────────────────┤
+│  Week 9-10: 🛠️ Agent Harness（进阶必修）                      │
+│  ├── 认知升级：Agent = Model + Harness                        │
+│  ├── 掌握十二大模块与三大核心机制（上下文/权限/验证）           │
+│  ├── 从零构建最小可行 Harness 🧰                              │
+│  └── 开源 Harness 选型 + AGENTS.md / Skills 标准              │
 └─────────────────────────────────────────────────────────────┘
 
 ```

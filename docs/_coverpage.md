@@ -11,16 +11,16 @@
 
 <p class="cover-subtitle">AI Agent <span class="highlight-text">从零开始构建智能体</span></p>
 
-<p class="cover-desc">全面 · 系统 · 开源  —  LangChain v1 + LangGraph 1.1 实战教程</p>
+<p class="cover-desc">全面 · 系统 · 开源  —  LangChain v1 + LangGraph 1.1 + Agent Harness</p>
 
 <div class="cover-stats">
   <div class="stat-item">
-    <span class="stat-num">8</span>
+    <span class="stat-num">9</span>
     <span class="stat-label">大章节</span>
   </div>
   <div class="stat-divider"></div>
   <div class="stat-item">
-    <span class="stat-num">55+</span>
+    <span class="stat-num">65+</span>
     <span class="stat-label">篇教程</span>
   </div>
   <div class="stat-divider"></div>

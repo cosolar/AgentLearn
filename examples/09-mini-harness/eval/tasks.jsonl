@@ -1,0 +1,6 @@
+{"id": "t001", "task": "让工作区里的校验脚本通过", "expect": {"tests_pass": true}}
+{"id": "t002", "task": "为 utils.py 补单元测试，覆盖率 >80%", "expect": {"tests_pass": true, "min_new_tests": 3}}
+{"id": "t003", "task": "把日志从 print 改为结构化 logging", "expect": {"tests_pass": true, "no_print": true}}
+{"id": "t004", "task": "修复 read_config 在文件缺失时抛出的异常", "expect": {"tests_pass": true}}
+{"id": "t005", "task": "为 API 客户端增加超时与重试", "expect": {"tests_pass": true, "has_timeout": true}}
+{"id": "t006", "task": "删除废弃的 legacy/ 目录并修正引用", "expect": {"tests_pass": true, "no_legacy_dir": true}}
