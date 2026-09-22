@@ -50,7 +50,7 @@
 
 <div class="cover-actions">
   <a class="btn-primary" href="#/01-intro/01-agent-intro">📖 开始阅读</a>
-  <a class="btn-secondary" href="https://gitcode.com/mininote/AgentLearn">⭐ Star on GitCode</a>
+  <a class="btn-secondary" href="https://github.com/cosolar/AgentLearn.git">⭐GitHub</a>
 </div>
 
 <div class="cover-scroll">

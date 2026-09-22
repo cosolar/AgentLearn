@@ -140,14 +140,33 @@ llm = ChatOpenAI(
 )
 ```
 
-`ChatOpenAI` 会自动从环境变量读取以下配置（无需手动传入）：
+`ChatOpenAI` 会自动从环境变量读取配置，无需手动传入：
 
 ```env
-LLM_API_KEY=sk-...      # → 传给 api_key 参数
-LLM_BASE_URL=https://... # → 传给 base_url 参数
+# ① langchain-openai 原生变量（ChatOpenAI 默认读取）
+OPENAI_API_KEY=sk-...
+OPENAI_API_BASE=https://api.openai.com/v1
+
+# ② 本教程的统一约定（便于跨厂商切换，需显式传入）
+LLM_API_KEY=sk-...
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_MODEL_NAME=gpt-5.5
 ```
 
-这种**自动注入**的设计让代码更干净——你不需要在每个文件中重复配置 API Key。
+> ⚠️ **重要**：`ChatOpenAI` 原生读取的是 `OPENAI_API_KEY` / `OPENAI_API_BASE`，**并不会自动读取 `LLM_API_KEY`**。教程为了统一管理多厂商配置，采用 `LLM_*` 约定并在代码里显式传入：
+>
+> ```python
+> import os
+> from langchain_openai import ChatOpenAI
+>
+> llm = ChatOpenAI(
+>     model=os.getenv("LLM_MODEL_NAME", "gpt-5.5"),
+>     api_key=os.getenv("LLM_API_KEY"),
+>     base_url=os.getenv("LLM_BASE_URL"),
+> )
+> ```
+>
+> 两套变量都已列在项目根目录的 `.env.example` 中，按需保留其一即可。
 
 #### 消息结构
 

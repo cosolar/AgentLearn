@@ -97,11 +97,28 @@ python examples/01-hello-agent/main.py
 
 ## 💻 运行文档网站
 
+> ⚠️ **必须通过 HTTP 服务器访问**（docsify 需要 fetch 加载 md，直接双击 `index.html`（`file://`）会空白）。
+
 ```bash
-# 使用 Docsify 本地预览文档
-npx docsify serve docs
+# 方式一：docsify-cli（推荐）
+npx docsify-cli serve docs
+#   ⚠️ 注意：是 docsify-cli，不是 docsify。
+#       npm 上的 `docsify` 包没有命令行入口，`npx docsify serve` 会报
+#       "could not determine executable to run"。
+#   ⚠️ docsify-cli 要求 Node >= 20.11
 # 访问 http://localhost:3000
+
+# 方式二：任意静态服务器（在 docs 目录下启动，使其成为网站根目录）
+cd docs
+python -m http.server 3000
+# 访问 http://localhost:3000
+
+# 方式三：全局安装
+npm i -g docsify-cli
+docsify serve docs
 ```
+
+> 💡 **部署路径说明**：`docs/index.html` 中**不要写死 `basePath: '/'`**。留空时 docsify 以 `index.html` 所在目录为基准解析 `README.md` / `_sidebar.md`，因此无论访问 `/`、`/docs/` 还是子路径都能正常加载；写死 `/` 会导致在非站点根目录下 `README/_sidebar` 404（页面空白）。
 
 ---
 

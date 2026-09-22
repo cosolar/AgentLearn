@@ -279,11 +279,19 @@ uv sync
 # 复制环境变量模板
 cp .env.example .env
 
-# 编辑 .env 文件，填入你的 API Key
+# 编辑 .env，至少填入你的 API Key
 # LLM_API_KEY=sk-xxxxxxxxxxxxxxxxxxxx
-# LLM_BASE_URL=https://api.openai.com/v1
+# LLM_BASE_URL=https://api.openai.com/v1   # 官方或中转地址，结尾带 /v1
 # LLM_MODEL_NAME=gpt-5.5
 ```
+
+> 💡 **关于两套变量名（重要）**
+> - `OPENAI_API_KEY` / `OPENAI_API_BASE`：`langchain-openai` 的**原生变量**，`ChatOpenAI` 会自动读取。**仓库自带的 `examples/` 是直接使用 `ChatOpenAI` 的，因此要跑通它们，必须设置 `OPENAI_API_KEY`**（并把示例中的模型名改成你可用的模型）。
+> - `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL_NAME`：**本教程统一约定**，教程中的示例代码会显式读取并传入，便于在 OpenAI / Anthropic / Gemini / DeepSeek / 通义之间切换。
+>
+> 两套变量都已列在 `.env.example`，按你的使用场景保留其一即可。
+
+> 🔐 `.env` 已被 `.gitignore` 忽略，**不会提交到仓库**。请勿把真实 Key 写入 `.env.example`。
 
 ### 🎮 运行示例
 
@@ -297,6 +305,33 @@ python examples/04-research-agent/main.py
 # 💬 Streamlit 聊天界面 — 交互式对话
 streamlit run examples/05-streamlit-chat/main.py
 ```
+
+### 📖 本地运行文档网站（可选）
+
+教程文档本身是一个 [Docsify](https://docsify.js.org/) 站点，源码位于 `docs/`。
+
+```bash
+# 方式一：docsify-cli（推荐）
+npx docsify-cli serve docs
+#   ⚠️ 是 docsify-cli，不是 docsify —— npm 上的 `docsify` 包没有命令行入口，
+#      执行 `npx docsify serve docs` 会报 "could not determine executable to run"。
+#   ⚠️ docsify-cli 要求 Node >= 20.11
+# 访问 http://localhost:3000
+
+# 方式二：全局安装后使用
+npm i -g docsify-cli
+docsify serve docs
+
+# 方式三：任意静态服务器（在 docs 目录下启动，使其成为网站根目录）
+cd docs
+python -m http.server 3000
+```
+
+> ⚠️ **必须通过 HTTP 访问**：docsify 依赖 `fetch` 加载 Markdown，直接双击打开 `docs/index.html`（`file://` 协议）会显示空白页。
+>
+> 💡 **部署提示**：`docs/index.html` 中的 `basePath` 请**保持默认（留空）**，这样无论部署在站点根目录还是子目录（如 `/docs/`）都能正确加载 `README.md` / `_sidebar.md`；写死 `basePath: '/'` 会在子路径部署时导致这两个文件 404，页面一片空白。
+>
+> 🔌 页面依赖的 CDN 资源若在你的网络环境下访问不稳定，可将 docsify / prism 等文件下载到 `docs/assets/` 后改为本地引用。
 
 ---
 

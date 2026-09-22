@@ -726,7 +726,13 @@
       // 基础配置
       name: '🤖 AgentLearn',
       repo: 'https://gitcode.com/mininote/AgentLearn',
-      basePath: '/',
+      // 注意：不要写死 basePath: '/'。
+      // 留空（默认）时，docsify 会以 index.html 所在目录为基准去加载
+      // README.md / _sidebar.md / _coverpage.md，因此在
+      //   http://host/          （站点根目录）
+      //   http://host/docs/     （子目录 / 本地静态服务器）
+      // 两种部署方式下都能正常工作。
+      // 写死 '/' 会在“非站点根目录”部署时导致 README/_sidebar 404，页面一片空白。
 
       // 侧边栏
       loadSidebar: true,
@@ -739,8 +745,8 @@
       // 封面
       coverpage: true,
 
-      // 默认主题
-      themeColor: '#4f46e5',
+      // 默认主题（与 CSS 变量 --theme-color 保持一致）
+      themeColor: '#7c3aed',
 
       // 代码高亮由下方 Prism 组件脚本自动处理
 
@@ -770,7 +776,9 @@
       },
 
       // TOC 增强插件：折叠 + 自动滚动
-      plugins: [
+      // 必须用 concat 保留此前已注册的插件（docsify-copy-code 等），
+      // 否则 Object.assign 会把 window.$docsify.plugins 整个覆盖掉，导致复制按钮等失效。
+      plugins: (window.$docsify.plugins || []).concat([
         function(hook, vm) {
           var tocObserver = null;
 
@@ -905,7 +913,7 @@
             });
           }
         }
-      ],
+      ]),
     });
   </script>
 
@@ -913,13 +921,16 @@
   <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/docsify.min.js"></script>
 
   <!-- 插件: 右侧目录（TOC） -->
-  <script src="https://unpkg.com/docsify-toc@1.0.0/dist/toc.js"></script>
+  <!-- 统一使用 jsDelivr（国内可达性优于 unpkg），不再依赖 unpkg 单点 -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify-toc@1.0.0/dist/toc.js"></script>
 
   <!-- 插件: 搜索 -->
   <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
 
   <!-- 插件: 图片缩放 -->
-  <script src="https://cdn.jsdelivr.net/npm/docsify-zoom-image@1/dist/docsify-zoom-image.min.js"></script>
+  <!-- 注意：npm 上并不存在 docsify-zoom-image 这个包（原地址会 404）。
+       图片缩放是 docsify 官方内置插件，正确路径如下。 -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/zoom-image.min.js"></script>
 
   <!-- Prism 语法高亮 -->
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-python.min.js"></script>
