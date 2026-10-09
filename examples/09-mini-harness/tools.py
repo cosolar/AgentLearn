@@ -1,6 +1,6 @@
 """tools.py —— 工具注册表 + 受控执行
 
-工具层职责链（对应 docs/09-agent-harness/02-anatomy.md）：
+工具层职责链（对应 docs/09-驾驭工程/02-十二大模块解剖.md）：
 
     注册 → schema 校验 → 参数提取 → 权限检查 → 沙箱执行 → 结果捕获 → 格式化为 observation
 

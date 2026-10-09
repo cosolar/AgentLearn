@@ -1,6 +1,6 @@
 """permissions.py —— deny-first 权限判定
 
-核心原则（对应 docs/09-agent-harness/04-permissions-sandbox.md）：
+核心原则（对应 docs/09-驾驭工程/04-权限护栏与沙箱.md）：
 
     权限执行与模型推理解耦：
       模型决定"想尝试做什么"，工具系统决定"什么被允许"。

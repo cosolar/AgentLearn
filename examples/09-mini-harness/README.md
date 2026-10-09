@@ -1,6 +1,6 @@
 # 🧰 Mini Harness —— 最小可行 Harness（MVH）
 
-> 配套教程：[docs/09-agent-harness/08-build-your-harness.md](../../docs/09-agent-harness/08-build-your-harness.md)
+> 配套教程：[docs/09-驾驭工程/08-构建最小可行Harness.md](../../docs/09-驾驭工程/08-构建最小可行Harness.md)
 
 一个**约 700 行、纯标准库**的 Agent Harness 骨架，把「Harness 十二大模块」里的核心七件事真正跑了起来。
 
@@ -85,8 +85,8 @@ python main.py "阅读工作区代码，让校验脚本通过"
 
 | 主题 | 章节 |
 |------|------|
-| 十二大模块 | [9.2](../../docs/09-agent-harness/02-anatomy.md) |
-| 上下文压缩 | [9.3](../../docs/09-agent-harness/03-context-engineering.md) |
-| 权限与沙箱 | [9.4](../../docs/09-agent-harness/04-permissions-sandbox.md) |
-| 验证循环 | [9.5](../../docs/09-agent-harness/05-verification.md) |
-| 评测与可观测性 | [9.11](../../docs/09-agent-harness/11-evaluation-observability.md) |
+| 十二大模块 | [9.2](../../docs/09-驾驭工程/02-十二大模块解剖.md) |
+| 上下文压缩 | [9.3](../../docs/09-驾驭工程/03-上下文工程与压缩.md) |
+| 权限与沙箱 | [9.4](../../docs/09-驾驭工程/04-权限护栏与沙箱.md) |
+| 验证循环 | [9.5](../../docs/09-驾驭工程/05-验证循环.md) |
+| 评测与可观测性 | [9.11](../../docs/09-驾驭工程/11-评测与可观测性.md) |
