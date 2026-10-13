@@ -1,6 +1,6 @@
 # 5.6 RAG 评估 —— 用数据证明检索与回答的质量
 
-> 📅 更新至 2026-10 · 技术栈基线见 [知识库大纲](../知识库大纲.md)
+> 📅 更新至 2026-10 · 技术栈基线见 [教程大纲](../教程大纲.md)
 
 ## 📖 导读
 
@@ -141,7 +141,7 @@ def judge_faithfulness_llm(question: str, context: str, answer: str) -> float:
 
 > ⚠️ **使用 LLM-judge 的三条纪律**：① 固定 prompt 与模型版本；② 抽样人工复核，确认 judge 本身靠谱；③ 把它当**趋势指标**，不要当绝对分数。
 
-成熟的评估框架（如 RAGAS）已经内置了 Faithfulness / Answer Relevance / Context Precision 等指标，可直接调用；见 [8.7 评估工具](../08-生态全景/生态调研/07-评估工具.md)。
+成熟的评估框架（如 RAGAS）已经内置了 Faithfulness / Answer Relevance / Context Precision 等指标，可直接调用；见 [8.7 评估工具](../08-生态与选型/生态调研/07-评估工具.md)。
 
 ---
 

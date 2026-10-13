@@ -1,6 +1,6 @@
 # 9.10 AGENTS.md、Agent Skills 与 Spec 驱动开发 —— 跨工具的 Harness 标准
 
-> 📅 更新至 2026-10 · 技术栈基线见 [知识库大纲](../知识库大纲.md)
+> 📅 更新至 2026-10 · 技术栈基线见 [教程大纲](../教程大纲.md)
 
 ## 📖 本章目标
 
@@ -566,4 +566,4 @@ def test_configurable_limit(client, monkeypatch):
 
 ---
 
-> 🔗 **延伸阅读**：Harness 内部有哪些模块、guides 与 sensors 如何贯穿其中，见 [9.2 十二大模块](./02-十二大模块解剖.md) 与 [9.7 Harness Engineering](./07-Harness工程方法论.md)；开源 Harness 的全景与选型，见 [9.9 开源 Harness 全景与选型](./09-开源Harness全景.md)；底层编排与框架生态，见 [8.1 核心 Agent 框架全景对比](../08-生态全景/生态调研/01-核心框架对比.md)。
+> 🔗 **延伸阅读**：Harness 内部有哪些模块、guides 与 sensors 如何贯穿其中，见 [9.2 十二大模块](./02-十二大模块解剖.md) 与 [9.7 Harness Engineering](./07-Harness工程方法论.md)；开源 Harness 的全景与选型，见 [9.9 开源 Harness 全景与选型](./09-开源Harness全景.md)；底层编排与框架生态，见 [8.1 核心 Agent 框架全景对比](../08-生态与选型/生态调研/01-核心框架对比.md)。

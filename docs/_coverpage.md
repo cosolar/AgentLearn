@@ -49,7 +49,7 @@
 </div>
 
 <div class="cover-actions">
-  <a class="btn-primary" href="#/知识库大纲">📐 知识库大纲</a>
+  <a class="btn-primary" href="#/教程大纲">📐 教程大纲</a>
   <a class="btn-secondary" href="#/01-入门基础/01-AI-Agent导论">📖 开始阅读</a>
   <a class="btn-secondary" href="https://gitcode.com/mininote/AgentLearn">⭐GitCode</a>
 </div>
