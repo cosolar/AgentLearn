@@ -1,10 +1,12 @@
 # 7.4 CI/CD 流水线 —— 自动化构建、测试和部署
 
+> 📅 更新至 2026-10 · 技术栈基线见 [知识库大纲](../知识库大纲.md)
+
 ## 📖 导读
 
-> **手动部署是风险的温床。CI/CD 让"一键部署"变成"一次提交，自动上线"。**
+> **手动部署是风险的温床。CI/CD 让"一次提交，自动上线"成为可能——但也让"一次提交，自动翻车"成为可能。**
 
-CI/CD（持续集成/持续部署）是现代软件开发的核心实践。对 Agent 应用来说，CI/CD 意味着：**每次代码变更都自动经过构建→测试→部署的完整流程**，确保发布的质量和速度。
+对 Agent 应用来说，CI/CD 不只是跑单元测试：**还必须把评测回归纳入门禁**——代码能跑不代表效果没退化。本章给出完整流水线：**质量检查 → 测试 → 评测回归阻断 → 构建镜像 → 灰度发布 → 可回滚**。
 
 ---
 
@@ -12,288 +14,219 @@ CI/CD（持续集成/持续部署）是现代软件开发的核心实践。对 A
 
 | 概念 | 说明 |
 |------|------|
-| CI（持续集成） | 代码变更后自动构建和测试 |
-| CD（持续部署） | 测试通过后自动部署到目标环境 |
-| GitHub Actions | GitHub 提供的 CI/CD 平台 |
-| Pipeline | 定义自动化流程的配置文件 |
+| CI（持续集成） | 变更后自动构建与测试 |
+| CD（持续部署） | 测试通过后自动发布 |
+| GitHub Actions | 主流 CI/CD 平台 |
+| 门禁（Gate） | 不达标就阻断流程的检查点 |
+| 灰度（Canary） | 先放量小流量，验证后再全量 |
 
 ---
 
-## 二、CI/CD 流程设计
+## 二、流程设计
 
 ```text
-开发者提交代码
+提交代码 / PR
      │
      ▼
-┌─────────────────────┐
-│   触发 CI/CD         │
-│    (push / PR)       │
-└─────────┬───────────┘
-          │
-          ▼
-┌─────────────────────┐
-│   代码检查 (Lint)    │
-│   - 语法检查         │
-│   - 格式化检查       │
-│   - 安全扫描         │
-└─────────┬───────────┘
-          │
-          ▼
-┌─────────────────────┐
-│   单元测试           │
-│   - Python 测试      │
-│   - Agent 功能测试   │
-└─────────┬───────────┘
-          │
-          ▼
-┌─────────────────────┐
-│   构建 Docker 镜像   │
-│   - 构建             │
-│   - 扫描漏洞         │
-│   - 推送到仓库       │
-└─────────┬───────────┘
-          │
-          ▼
-┌─────────────────────┐
-│   部署               │
-│   - 开发环境 (自动)   │
-│   - 预发布环境 (自动) │
-│   - 生产环境 (手动)  │
-└─────────────────────┘
+① Lint + 类型检查（ruff / mypy）
+     │
+     ▼
+② 单元测试 + 覆盖率（pytest / codecov）
+     │
+     ▼
+③ 评测回归门禁（eval gate）★ Agent 专属
+     │  准确率回退或安全用例失败 → 阻断
+     ▼
+④ 构建并推送镜像（buildx）
+     │
+     ▼
+⑤ 部署预发布 → 冒烟测试
+     │
+     ▼
+⑥ 灰度发布（10% 流量）→ 观察 → 全量 / 回滚
 ```
 
 ---
 
-## 三、代码质量和测试
+## 三、测试与代码质量
 
-### 3.1 测试用例编写
+### 3.1 API 测试
 
 ```python
-# tests/test_agent.py
-import pytest
-from agent import SupportAgent
-
-
-@pytest.fixture
-def agent():
-    """创建测试用的 Agent 实例"""
-    return SupportAgent()
-
-
-class TestSupportAgent:
-    """测试 SupportAgent 的核心功能"""
-    
-    def test_initialization(self, agent):
-        """测试初始化"""
-        assert agent is not None
-        assert agent.llm is not None
-    
-    def test_answer_basic(self, agent):
-        """测试基本回答功能"""
-        result = agent.answer("你好")
-        assert "answer" in result
-        assert len(result["answer"]) > 0
-    
-    def test_answer_with_context(self, agent):
-        """测试基于知识库的回答"""
-        result = agent.answer("什么是 RAG？")
-        assert len(result["answer"]) > 10
-    
-    def test_sources_format(self, agent):
-        """测试来源信息格式"""
-        result = agent.answer("AI Agent")
-        if result.get("sources"):
-            for source in result["sources"]:
-                assert "title" in source
-                assert "content" in source
-    
-    @pytest.mark.parametrize("question", [
-        "",                           # 空字符串
-        "a" * 5000,                   # 超长输入
-        "<script>alert(1)</script>",  # XSS 尝试
-    ])
-    def test_edge_cases(self, agent, question):
-        """测试边界情况"""
-        with pytest.raises(Exception):
-            agent.answer(question)
-
-
 # tests/test_api.py
+"""API 端点测试"""
 from fastapi.testclient import TestClient
+
 from main import app
 
 client = TestClient(app)
+HEADERS = {"X-API-Key": "test-key"}
 
 
-class TestAPI:
-    """测试 API 端点"""
-    
-    def test_health_check(self):
-        """测试健康检查"""
-        response = client.get("/health")
-        assert response.status_code == 200
-        assert response.json()["status"] == "ok"
-    
-    def test_chat_endpoint(self):
-        """测试聊天接口"""
-        response = client.post("/chat", json={
-            "message": "你好",
-        })
-        assert response.status_code == 200
-        data = response.json()
-        assert "message" in data
-        assert "session_id" in data
-    
-    def test_chat_with_session(self):
-        """测试带会话的聊天"""
-        # 第一次对话
-        r1 = client.post("/chat", json={"message": "你好"})
-        session_id = r1.json()["session_id"]
-        
-        # 第二次对话（同一会话）
-        r2 = client.post("/chat", json={
-            "session_id": session_id,
-            "message": "刚才说到哪里了？",
-        })
-        assert r2.status_code == 200
-        assert r2.json()["session_id"] == session_id
+def test_health():
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "ok"
+
+
+def test_chat_requires_api_key():
+    """缺少鉴权应返回 401，且符合错误契约"""
+    resp = client.post("/chat", json={"message": "hi"})
+    assert resp.status_code == 401
+    body = resp.json()
+    assert {"error", "code", "request_id"} <= set(body)
+
+
+def test_chat_validation_error():
+    """空消息应被 Pydantic 拦截，返回 422 错误契约"""
+    resp = client.post("/chat", json={"message": ""}, headers=HEADERS)
+    assert resp.status_code == 422
+    assert resp.json()["error"] == "validation_error"
 ```
 
-### 3.2 Agent 特定测试
+### 3.2 评测回归门禁（Agent 专属）
+
+把 [6.2 评估与优化](../06-高级主题/02-评估与优化.md) 的评测框架接入 CI：**每次改动都跑一遍评测集，准确率回退或安全用例失败就阻断发布。**
 
 ```python
-# tests/test_agent_eval.py
-class TestAgentQuality:
-    """Agent 质量测试"""
-    
-    def test_no_hallucination(self, agent):
-        """测试是否会产生幻觉"""
-        # 对于知识库中没有的信息，Agent 不应编造
-        result = agent.answer("地球是平的吗？")
-        assert "无法确定" in result["answer"] or \
-               "未找到" in result["answer"] or \
-               "抱歉" in result["answer"]
-    
-    def test_consistency(self, agent):
-        """测试回答一致性"""
-        # 同样的问题应该得到一致的答案
-        answers = []
-        for _ in range(3):
-            result = agent.answer("什么是 CI/CD？")
-            answers.append(result["answer"])
-        
-        # 至少应该包含核心概念
-        for answer in answers:
-            assert "持续集成" in answer or \
-                   "持续部署" in answer or \
-                   "automated" in answer
-    
-    def test_response_time(self, agent):
-        """测试响应时间"""
-        import time
-        start = time.time()
-        agent.answer("Python 列表怎么用？")
-        elapsed = time.time() - start
-        assert elapsed < 10.0  # 应在 10 秒内
+# scripts/eval_gate.py
+"""CI 评测回归门禁：当前 vs 基线，回退即失败退出（退出码非 0 阻断流水线）"""
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+BASELINE_PATH = Path("eval/baseline.json")
+CURRENT_PATH = Path("eval/current.json")
+MAX_ACCURACY_DROP = 0.02  # 总体准确率允许的最大回退
+
+
+def load_report(path: Path) -> dict:
+    """加载评测报告（由 pytest 或评测脚本产出）"""
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def main() -> int:
+    if not BASELINE_PATH.exists() or not CURRENT_PATH.exists():
+        print("missing eval reports; skip gate")
+        return 0
+
+    baseline = load_report(BASELINE_PATH)
+    current = load_report(CURRENT_PATH)
+
+    base_acc = baseline["accuracy"]
+    curr_acc = current["accuracy"]
+    base_fail = {item["id"] for item in baseline["failures"]}
+    curr_fail = {item["id"] for item in current["failures"]}
+    regressions = sorted(curr_fail - base_fail)
+
+    print(f"baseline accuracy : {base_acc:.2%}")
+    print(f"current  accuracy : {curr_acc:.2%}")
+    print(f"regressions       : {regressions}")
+
+    if curr_acc < base_acc - MAX_ACCURACY_DROP or regressions:
+        print("EVAL REGRESSION DETECTED -> blocking release")
+        return 1
+
+    print("eval gate passed")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
 ```
+
+> ⚠️ **为什么必须有这道门禁**：Prompt、工具、模型、检索策略的任何改动都可能让效果回退。**没有评测门禁的 CI，只保证"代码能跑"，不保证"效果没退"。**
 
 ---
 
-## 四、GitHub Actions 配置
-
-### 4.1 基础流水线
+## 四、GitHub Actions 流水线
 
 ```yaml
 # .github/workflows/ci.yml
-name: CI Pipeline
+name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
     branches: [main]
 
 jobs:
-  # ===== 代码质量检查 =====
   lint:
-    name: Code Quality
+    name: Lint & Type Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: "pip"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install ruff black mypy
-          pip install -r requirements.txt
-
-      - name: Lint with Ruff
+      - uses: astral-sh/setup-uv@v5
+      - name: Install dev dependencies
+        run: uv pip install --system ruff mypy
+      - name: Ruff
         run: ruff check .
-
-      - name: Check formatting with Black
-        run: black --check .
-
-      - name: Type check with mypy
+      - name: Mypy
         run: mypy . --ignore-missing-imports
 
-  # ===== 测试 =====
   test:
-    name: Run Tests
+    name: Unit Tests
     needs: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: "pip"
-
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-cov
-
-      - name: Run tests with coverage
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          pytest tests/ --cov=. --cov-report=xml --cov-report=term -v
-
+      - name: Run tests
+        run: pytest tests/ --cov=. --cov-report=xml --cov-report=term -q
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml
 
-  # ===== 构建 Docker 镜像 =====
-  build:
-    name: Build Docker Image
+  eval-gate:
+    name: Eval Regression Gate
     needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+      - name: Run evaluation set
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_MODEL_NAME: gpt-5.5
+        run: pytest tests/test_eval.py -q   # 产出 eval/current.json
+      - name: Check regression against baseline
+        run: python scripts/eval_gate.py
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
+  build:
+    name: Build & Push Image
+    needs: eval-gate
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
+      - uses: docker/build-push-action@v6
         with:
           context: .
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/agent-api:latest
             ${{ secrets.DOCKER_USERNAME }}/agent-api:${{ github.sha }}
@@ -301,7 +234,11 @@ jobs:
           cache-to: type=gha,mode=max
 ```
 
-### 4.2 部署流水线
+> 💡 用 `needs:` 串起"质量 → 测试 → 评测 → 构建"，任何一环失败都不会进入下一环，避免把回归版本推上线。
+
+---
+
+## 五、部署：灰度发布与回滚
 
 ```yaml
 # .github/workflows/deploy.yml
@@ -309,176 +246,141 @@ name: Deploy
 
 on:
   workflow_run:
-    workflows: ["CI Pipeline"]
+    workflows: ["CI"]
+    types: [completed]
     branches: [main]
-    types:
-      - completed
 
 jobs:
-  deploy-staging:
+  staging:
     name: Deploy to Staging
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     environment: staging
     steps:
-      - name: Deploy to staging server
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Roll out to staging
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
           script: |
-            cd /opt/agent-service
-            docker-compose pull
-            docker-compose up -d --force-recreate
-            echo "✅ 部署到预发布环境完成"
+            cd /opt/agent-api
+            export IMAGE_TAG=${{ github.event.workflow_run.head_sha }}
+            docker compose pull
+            docker compose up -d
+            ./scripts/smoke_test.sh http://localhost:8000
 
-  deploy-production:
-    name: Deploy to Production
-    needs: deploy-staging
+  production:
+    name: Canary then Full Release
+    needs: staging
     runs-on: ubuntu-latest
-    environment: production
-    # 生产部署需要手动审批
+    environment: production        # 在仓库 Settings → Environments 配置人工审批
     steps:
-      - name: Manual approval gate
-        run: echo "等待人工审批..."
-
-      - name: Deploy to production
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Canary rollout (10%)
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.PROD_HOST }}
           username: ${{ secrets.PROD_USER }}
           key: ${{ secrets.PROD_SSH_KEY }}
           script: |
-            cd /opt/agent-service
-            docker-compose pull
-            docker-compose up -d --force-recreate
-            echo "✅ 部署到生产环境完成"
-```
-
-### 4.3 自动发布版本
-
-```yaml
-# .github/workflows/release.yml
-name: Release
-
-on:
-  push:
-    tags:
-      - "v*"  # 推送 v1.0.0 这样的 tag 时触发
-
-jobs:
-  release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+            cd /opt/agent-api
+            export IMAGE_TAG=${{ github.event.workflow_run.head_sha }}
+            ./scripts/canary.sh 10 300   # 放量 10%，观察 300 秒
+      - name: Full rollout
+        uses: appleboy/ssh-action@v1.2.0
         with:
-          fetch-depth: 0
-
-      - name: Generate changelog
-        id: changelog
-        uses: ./.github/actions/changelog
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          body: ${{ steps.changelog.outputs.changelog }}
-          files: |
-            Dockerfile
-            docker-compose.yml
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            cd /opt/agent-api
+            ./scripts/canary.sh 100 0
 ```
-
----
-
-## 五、本地 Git Hook（可选）
-
-在提交代码前自动检查，避免不合规的代码进入仓库：
 
 ```bash
-# .githooks/pre-commit
-#!/bin/bash
-echo "🔍 运行 pre-commit 检查..."
+#!/usr/bin/env bash
+# scripts/canary.sh: shift traffic weight, watch metrics, auto rollback on failure
+set -euo pipefail
 
-# 运行代码检查
-ruff check .
-if [ $? -ne 0 ]; then
-    echo "❌ 代码检查未通过"
+WEIGHT="${1:?weight percent required}"
+OBSERVE_SECONDS="${2:-0}"
+API="http://localhost:8000"
+
+# 1) Shift traffic to the new version
+echo "shifting ${WEIGHT}% traffic to new version"
+# (illustrative: update nginx upstream weight or a service mesh rule here)
+
+# 2) Observe metrics for the given window
+if [ "${OBSERVE_SECONDS}" -gt 0 ]; then
+  echo "observing for ${OBSERVE_SECONDS}s ..."
+  sleep "${OBSERVE_SECONDS}"
+  ERROR_RATE=$(curl -s "${API}/metrics" | grep -c "status=\"error\"" || true)
+  if [ "${ERROR_RATE}" -gt 5 ]; then
+    echo "error budget exceeded, rolling back"
+    ./scripts/rollback.sh
     exit 1
+  fi
 fi
 
-# 运行快速测试
-pytest tests/ -x --timeout=30 -q
-if [ $? -ne 0 ]; then
-    echo "❌ 测试未通过"
-    exit 1
-fi
-
-echo "✅ 所有检查通过"
+echo "canary ok at ${WEIGHT}%"
 ```
 
----
+```bash
+#!/usr/bin/env bash
+# scripts/rollback.sh: switch back to the previous known-good image tag
+set -euo pipefail
 
-## 六、环境管理
+PREV_TAG="$(cat .last_good_tag 2>/dev/null || echo latest)"
+echo "rolling back to ${PREV_TAG}"
 
-```yaml
-# .github/environments.yaml
-name: Agent Service Environments
-
-environments:
-  - name: development
-    protection_rules: []
-    deployment_branch: develop
-    variables:
-      LLM_MODEL_NAME: gpt-5-mini
-      LOG_LEVEL: debug
-
-  - name: staging
-    protection_rules: []
-    deployment_branch: main
-    variables:
-      LLM_MODEL_NAME: gpt-5-mini
-      LOG_LEVEL: info
-
-  - name: production
-    protection_rules:
-      - required_reviewers: 1  # 需要审批
-      - wait_timer: 5          # 5 分钟等待期
-    deployment_branch: main
-    variables:
-      LLM_MODEL_NAME: gpt-5.5
-      LOG_LEVEL: warning
-      ENABLE_MONITORING: true
+cd /opt/agent-api
+export IMAGE_TAG="${PREV_TAG}"
+docker compose pull
+docker compose up -d
+./scripts/smoke_test.sh http://localhost:8000
+echo "rollback complete"
 ```
 
----
-
-## 七、CI/CD 注意事项
-
-| 注意点 | 说明 | 最佳实践 |
-|--------|------|----------|
-| **API Key** | 不硬编码在代码中 | 使用 GitHub Secrets |
-| **测试环境** | 使用 Mock 而不是真实 API | 控制测试成本 |
-| **构建缓存** | 避免每次都重新下载依赖 | Docker layer caching |
-| **回滚方案** | 部署失败能快速回退 | 保留上一个版本 |
-| **测试数据** | 测试用的小型知识库 | 避免加载完整知识库 |
+> 💡 **回滚三原则**：① 镜像**不可变**（用 git sha 打 tag，别只依赖 `latest`）；② 记录"上一个已知良好版本"（`.last_good_tag`）；③ 回滚后自动跑**冒烟测试**确认恢复。
 
 ---
 
-## 八、本章总结
+## 六、环境与密钥
 
-| 环节 | 工具/方法 | 说明 |
-|------|-----------|------|
-| **代码检查** | Ruff + Black | 自动检查代码风格 |
-| **测试** | pytest | 单元测试 + API 测试 |
-| **构建** | Docker Buildx | 多架构镜像构建 |
-| **CI 流水线** | GitHub Actions | 自动触发构建和测试 |
-| **CD 部署** | SSH + Docker | 自动部署到服务器 |
+GitHub 的**环境（Environments）在仓库 Settings → Environments 中配置**，不是 YAML 文件。建议：
+
+| 环境 | 审批 | 变量 / 密钥 |
+|------|------|-------------|
+| **development** | 无 | `LLM_MODEL_NAME=gpt-5.5`，`LOG_LEVEL=debug` |
+| **staging** | 无 | 独立 `LLM_API_KEY`（限额），`LOG_LEVEL=info` |
+| **production** | **需人工审批** | 生产密钥，`LOG_LEVEL=warning` |
+
+| 注意点 | 最佳实践 |
+|--------|----------|
+| **API Key** | 存 GitHub Secrets，绝不硬编码 |
+| **测试成本** | 单元测试用 Mock；评测集用小样本 |
+| **构建缓存** | `cache-from/to: type=gha` |
+| **回滚** | 保留上一版本镜像 + `.last_good_tag` |
+| **最小权限** | Actions 默认 `permissions: read-all`，按需授权 |
+
+---
+
+## 七、本章小结
+
+| 环节 | 工具 / 方法 | 说明 |
+|------|-------------|------|
+| **代码检查** | Ruff + Mypy | 风格与类型门禁 |
+| **测试** | pytest + codecov | 单元测试与覆盖率 |
+| **评测门禁** | `eval_gate.py` | 回归即阻断（Agent 专属） |
+| **构建** | Docker Buildx | 多架构、带缓存 |
+| **CI** | GitHub Actions | `needs:` 串联各阶段 |
+| **CD** | 灰度 → 观察 → 全量 / 回滚 | 可回滚的发布 |
 
 ---
 
 ## 📝 课后练习
 
-1. **✅ 基础**：在 GitHub 仓库中配置 `.github/workflows/ci.yml`，运行基本的 lint + test
-2. **💡 改进**：添加 Docker 构建和推送步骤到 CI 流水线
-3. **🚀 挑战**：配置完整的 CI/CD，实现"推送 main 分支 → 自动测试 → 构建镜像 → 部署到预发布环境"
-4. **🔍 探索**：了解 GitHub Actions 的 matrix 策略，配置 Python 3.11 / 3.12 的多版本测试
+1. **✅ 基础**：为你的仓库配置 `.github/workflows/ci.yml`，跑通 lint + test。
+2. **💡 改进**：把评测集接入 CI，产出 `eval/current.json` 并运行 `eval_gate.py`。
+3. **🚀 挑战**：实现 `canary.sh` 与 `rollback.sh`，模拟一次"灰度失败 → 自动回滚"。
+4. **🔍 探索**：用 matrix 策略在 Python 3.12 / 3.13 上并行跑测试。

@@ -1,5 +1,7 @@
 # 9.7 Harness Engineering 方法论 —— 从「写代码」到「设计环境」
 
+> 📅 更新至 2026-10 · 技术栈基线见 [知识库大纲](../知识库大纲.md)
+
 ## 📖 导读
 
 > **Humans steer, agents execute.**

@@ -1,0 +1,11 @@
+# API 服务依赖（对应教程 7.1）
+langchain>=1.4.5
+langchain-core>=1.6.10
+langchain-openai>=1.7.1
+langgraph>=1.2.15
+langgraph-checkpoint>=4.3.0
+fastapi>=0.143.0
+uvicorn[standard]>=0.54.0
+pydantic>=2.14.1
+pydantic-settings>=2.15.0
+python-dotenv>=1.2.4

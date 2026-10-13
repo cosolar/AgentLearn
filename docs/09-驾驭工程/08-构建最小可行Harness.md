@@ -1,5 +1,7 @@
 # 9.8 实战：从零构建最小可行 Harness —— 一个真的能跑的 mini-harness
 
+> 📅 更新至 2026-10 · 技术栈基线见 [知识库大纲](../知识库大纲.md)
+
 ## 📖 导读
 
 > **最常见、也最致命的错误：在理解自己的失败模式之前就过度工程化。**
@@ -237,6 +239,7 @@ class ToolRegistry:
 ### 4.1 路径越界防护（容易漏掉的一环）
 
 ```python
+# doc-check: skip —— 方法片段（节选自 tools.py），非独立可运行
     def _resolve(self, path: str) -> Path:
         """把相对路径解析到 workspace 内，阻止 ../../etc/passwd"""
         root = self.cfg.workspace.resolve()
@@ -389,6 +392,7 @@ class Trace:
 ### 8.1 内部使用"中立消息格式"
 
 ```python
+# doc-check: skip —— 消息结构记法示意，非可运行代码
 {"role": "system"|"user", "content": str}
 {"role": "assistant", "content": str, "tool_calls": [{"id","name","args": dict}]}
 {"role": "tool", "tool_call_id": str, "name": str, "content": str}

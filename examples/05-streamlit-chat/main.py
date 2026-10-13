@@ -8,6 +8,8 @@ Streamlit 聊天界面 — 支持流式输出的对话 Agent
     pip install streamlit
 """
 
+import os
+
 import streamlit as st
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
@@ -15,6 +17,8 @@ from langchain_openai import ChatOpenAI
 from agentlearn import DialogAgent, Msg
 
 load_dotenv()
+
+DEFAULT_MODEL = os.getenv("LLM_MODEL_NAME", "gpt-5.5")
 
 # ---------------------------------------------------------------------------
 # 页面配置
@@ -40,14 +44,19 @@ def init_agent(model_name: str) -> DialogAgent:
             "你是一个友好、有帮助的 AI 助手。"
             "用中文回答，回答简洁准确，必要时可以详细解释。"
         ),
-        llm=ChatOpenAI(model=model_name, temperature=0.7),
+        llm=ChatOpenAI(
+            model=model_name,
+            temperature=0.7,
+            api_key=os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY"),
+            base_url=os.getenv("LLM_BASE_URL") or os.getenv("OPENAI_API_BASE"),
+        ),
         verbose=True,
     )
 
 
 def init_session():
     if "agent" not in st.session_state:
-        st.session_state.agent = init_agent("gpt-4o-mini")
+        st.session_state.agent = init_agent(DEFAULT_MODEL)
     if "messages" not in st.session_state:
         st.session_state.messages = []  # [{"role": str, "content": str}, ...]
     if "model_changed" not in st.session_state:
@@ -64,14 +73,15 @@ with st.sidebar:
     st.header("⚙️ 设置")
 
     # 模型选择
-    model_options = ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"]
+    model_options = [DEFAULT_MODEL, "gpt-5.5", "gpt-5-mini", "claude-sonnet-4-6"]
+    model_options = list(dict.fromkeys(model_options))  # 去重，保留顺序
     selected_model = st.selectbox(
         "模型",
         model_options,
         index=model_options.index(
             st.session_state.agent.llm.model_name
             if st.session_state.agent.llm
-            else "gpt-4o-mini"
+            else DEFAULT_MODEL
         ),
     )
 
@@ -135,7 +145,10 @@ current_model = st.session_state.agent.llm.model_name if st.session_state.agent.
 if (selected_model != current_model
         or abs(temperature - (st.session_state.agent.llm.temperature if st.session_state.agent.llm else 0.7)) > 0.01):
     st.session_state.agent.llm = ChatOpenAI(
-        model=selected_model, temperature=temperature
+        model=selected_model,
+        temperature=temperature,
+        api_key=os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY"),
+        base_url=os.getenv("LLM_BASE_URL") or os.getenv("OPENAI_API_BASE"),
     )
 
 if sys_prompt != st.session_state.agent.sys_prompt:

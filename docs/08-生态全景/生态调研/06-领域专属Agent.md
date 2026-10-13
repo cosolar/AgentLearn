@@ -68,7 +68,9 @@ def search_codebase(query: str) -> str:
 
 **技术栈：** Tree-sitter（AST 分析）、LSP（语言服务）、Docker/gVisor（沙箱）、MCP（工具接入）
 
-### 2. 数据科学 Agent — AutoGen Data Scientist
+### 2. 数据科学 Agent — 多 Agent 数据科学流水线
+
+> AutoGen 已并入 **Microsoft Agent Framework（MAF）**；其经典的数据科学示例能力现由 MAF 的多 Agent 编排承接。
 
 **核心能力：**
 - 数据清洗与预处理
@@ -77,14 +79,30 @@ def search_codebase(query: str) -> str:
 - 可视化报告生成
 
 ```python
-# 数据科学 Agent 的工具集
-data_science_tools = [
-    tool("load_csv", "加载数据文件"),
-    tool("clean_data", "数据清洗（缺失值、异常值）"),
-    tool("visualize", "生成图表"),
-    tool("train_model", "训练 ML 模型"),
-    tool("evaluate", "模型评估"),
-]
+# 数据科学 Agent 的工具集（用 @tool 注册）
+from langchain_core.tools import tool
+
+
+@tool
+def load_csv(path: str) -> str:
+    """加载 CSV 数据文件"""
+    ...
+
+
+@tool
+def clean_data(path: str) -> str:
+    """数据清洗（缺失值、异常值）"""
+    ...
+
+
+@tool
+def visualize(path: str) -> str:
+    """生成图表"""
+    ...
+
+
+# 其余工具 train_model / evaluate 同理用 @tool 注册
+data_science_tools = [load_csv, clean_data, visualize]
 
 # 多 Agent 协作流程
 # 1. 数据分析师 Agent → 加载+清洗数据
@@ -104,7 +122,9 @@ data_science_tools = [
 
 ```python
 # 科研 Agent 工作流示例
+from typing import TypedDict
 from langgraph.graph import StateGraph
+
 
 class ResearchState(TypedDict):
     question: str              # 研究问题
@@ -112,6 +132,14 @@ class ResearchState(TypedDict):
     experiment_design: str     # 实验设计
     results: dict              # 实验结果
     paper_draft: str           # 论文草稿
+
+
+# 各节点函数需自行实现（此处仅占位）
+def search_papers(state): ...
+def design_experiment(state): ...
+def analyze_results(state): ...
+def write_paper(state): ...
+
 
 workflow = StateGraph(ResearchState)
 workflow.add_node("search_literature", search_papers)     # 文献检索
@@ -132,6 +160,9 @@ workflow.add_node("write_paper", write_paper)             # 论文撰写
 
 ```python
 # DevOps Agent 工具集
+from langchain_core.tools import tool
+
+
 @tool
 def check_service_health(service: str) -> str:
     """检查服务健康状态"""
@@ -167,6 +198,8 @@ def rollback_deployment(service: str, version: str) -> str:
 
 ```python
 # 金融 Agent 的安全要求
+from langchain_core.tools import tool
+
 FINANCIAL_SAFETY_PROMPT = """
 你是金融 AI 助手 Finch。你必须：
 1. 明确声明"I am an AI assistant, not a licensed financial advisor"
@@ -201,6 +234,8 @@ def calculate_risk_profile(portfolio: dict) -> str:
 
 ```python
 # 医疗 Agent 的严格安全约束
+from langchain_core.tools import tool
+
 MEDICAL_SAFETY_PROMPT = """
 你是医疗 AI 助手 MedBot。严格遵守：
 1. 免责声明：AI 辅助，不能替代医生诊断
@@ -247,17 +282,36 @@ def search_medical_literature(symptom: str) -> str:
 ## 构建你的领域 Agent
 
 ```python
-# 领域 Agent 的通用骨架
-class DomainAgent(DialogAgent):
+# 领域 Agent 的通用骨架（概念示意：真实项目请继承所用框架的 Agent 基类）
+from langchain_core.tools import tool  # noqa: F401  （注册领域工具时使用）
+
+# 前文已定义 FINANCIAL_SAFETY_PROMPT、MEDICAL_SAFETY_PROMPT，这里补齐其余两项
+DEVOPS_SAFETY_PROMPT = """
+你是 DevOps AI 助手。你必须：
+1. 任何变更前先做风险评估与备份
+2. 破坏性操作（删除、回滚、扩缩容）必须人工确认
+3. 优先只读诊断，写操作遵循最小权限
+"""
+DEFAULT_SAFETY_PROMPT = "你是领域 AI 助手，请遵守该领域的合规与安全要求。"
+
+
+class AgentBase:
+    """概念示意：真实项目请继承所用框架的 Agent 基类（如 MAF 的 ChatAgent）"""
+
+    def __init__(self, **kwargs):
+        pass
+
+
+class DomainAgent(AgentBase):
     """领域 Agent 基类"""
-    
+
     def __init__(self, domain: str, **kwargs):
         super().__init__(**kwargs)
         self.domain = domain
         self.safety_prompt = self._load_safety_prompt(domain)
         self.knowledge_base = self._init_knowledge_base(domain)
         self.tools = self._load_domain_tools(domain)
-    
+
     def _load_safety_prompt(self, domain: str) -> str:
         """加载领域安全提示词"""
         prompts = {
@@ -266,12 +320,12 @@ class DomainAgent(DialogAgent):
             "devops": DEVOPS_SAFETY_PROMPT,
         }
         return prompts.get(domain, DEFAULT_SAFETY_PROMPT)
-    
+
     def _init_knowledge_base(self, domain: str):
         """初始化领域知识库（RAG）"""
         # 加载领域文档 → 分块 → 向量化 → 存储
         pass
-    
+
     def _load_domain_tools(self, domain: str) -> list:
         """加载领域专用工具"""
         # 根据领域注册工具
@@ -295,6 +349,6 @@ class DomainAgent(DialogAgent):
 ## 📝 课后练习
 
 1. **设计题**：选择一个你熟悉的领域，列出 5 个该领域 Agent 必须具备的工具
-2. **构建题**：基于 DialogAgent 构建一个简易的领域 Agent，至少包含 RAG 知识库和 2 个专用工具
+2. **构建题**：基于本节的 `DomainAgent` 骨架构建一个简易的领域 Agent，至少包含 RAG 知识库和 2 个专用工具
 3. **思考题**：医疗和金融领域的 Agent 在安全约束上有什么异同？
 

@@ -20,7 +20,12 @@ class TeamMember:
     def __init__(self, role: str, expertise: str):
         self.role = role
         self.expertise = expertise
-        self.llm = ChatOpenAI(model="gpt-4o", temperature=0.5)
+        self.llm = ChatOpenAI(
+            model=os.getenv("LLM_MODEL_NAME", "gpt-5.5"),
+            temperature=0.5,
+            api_key=os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY"),
+            base_url=os.getenv("LLM_BASE_URL") or os.getenv("OPENAI_API_BASE"),
+        )
     
     def work(self, task: str, context: str = "") -> str:
         """执行任务"""
@@ -46,7 +51,12 @@ class TeamManager:
             TeamMember("作家", "内容创作和编辑"),
             TeamMember("审查员", "质量检查和改进"),
         ]
-        self.llm = ChatOpenAI(model="gpt-4o", temperature=0.3)
+        self.llm = ChatOpenAI(
+            model=os.getenv("LLM_MODEL_NAME", "gpt-5.5"),
+            temperature=0.3,
+            api_key=os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY"),
+            base_url=os.getenv("LLM_BASE_URL") or os.getenv("OPENAI_API_BASE"),
+        )
     
     def run(self, task: str):
         """运行团队"""

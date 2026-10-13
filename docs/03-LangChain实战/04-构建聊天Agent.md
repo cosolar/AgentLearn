@@ -1,5 +1,7 @@
 # 3.4 构建聊天 Agent —— 从对话到自主行动
 
+> 📅 更新至 2026-10 · 技术栈基线见 [知识库大纲](../知识库大纲.md)
+
 ## 📖 导读
 
 前几节我们学习了 Chain、Prompt、记忆、工具等独立概念。现在是时候**把它们组合成一个完整的聊天 Agent**——既能自然对话，又能使用工具，还有记忆能力。
@@ -304,6 +306,8 @@ print(manager.chat("user_b", "我最大的爱好是什么？"))   # → 音乐
 ```
 
 > 🏭 **生产环境**：把 `InMemorySaver` 换成 `PostgresSaver`，即可获得**跨进程、跨重启**的持久化会话记忆。
+>
+> 📦 需先装独立包：`uv add langgraph-checkpoint-postgres`（该包同时提供 `langgraph.store.postgres`）。
 
 ```python
 from langgraph.checkpoint.postgres import PostgresSaver

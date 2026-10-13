@@ -38,7 +38,7 @@
 
 ### 模式一：层级式协作 (Hierarchical)
 
-**代表框架：** CrewAI、AutoGen（Manager-Employee 模式）
+**代表框架：** CrewAI、Microsoft Agent Framework（原 AutoGen 的 Manager–Employee 模式）
 
 ```
                   ┌──────────────┐
@@ -71,6 +71,7 @@
 
 **CrewAI 实现：**
 ```python
+# doc-check: skip —— 概念示意（`...` 表示省略参数），非可运行代码
 from crewai import Agent, Task, Crew, Process
 
 manager = Agent(role="项目经理", goal="规划并监督项目", allow_delegation=True)
@@ -112,21 +113,26 @@ crew = Crew(agents=[manager, dev, tester], tasks=tasks, process=Process.hierarch
 - 通过自然语言对话协商
 - 动态决定谁做什么
 
-**AutoGen 实现：**
-```python
-from autogen import AssistantAgent, GroupChat, GroupChatManager
+**Microsoft Agent Framework 实现：**
+> ⚠️ AutoGen 已并入 **Microsoft Agent Framework（MAF）**，其 `GroupChat` 能力由 MAF 的多 Agent 编排承接。以下为**概念示意**，具体 API 以 MAF 官方文档为准。
 
-agent_a = AssistantAgent(name="研究员", ...)
-agent_b = AssistantAgent(name="分析师", ...)
-agent_c = AssistantAgent(name="审查员", ...)
+```python
+# 概念示意：MAF 的群聊式多 Agent 编排
+from agent_framework import ChatAgent
+from agent_framework.orchestrations import GroupChat
+
+agent_a = ChatAgent(name="研究员", instructions="负责检索资料")
+agent_b = ChatAgent(name="分析师", instructions="负责数据分析")
+agent_c = ChatAgent(name="审查员", instructions="负责复核结论")
 
 group_chat = GroupChat(
-    agents=[agent_a, agent_b, agent_c],
-    messages=[],
-    max_round=10,
+    participants=[agent_a, agent_b, agent_c],
+    max_rounds=10,
 )
-manager = GroupChatManager(groupchat=group_chat)
+await group_chat.run("请协作完成 2026 年 AI Agent 市场分析")
 ```
+
+> 💡 若偏好更轻量的交接式编排，也可用 **OpenAI Agents SDK** 的 `handoff` 实现平等的 Agent 间任务转交。
 
 ### 模式三：流程化协作 (Pipeline)
 
@@ -256,6 +262,6 @@ A2A 让"多 Agent 协作"不再受框架边界限制。详见 [8.11 A2A 协议�
 ## 📝 课后练习
 
 1. **设计题**：用 LangGraph 实现一个平等对话模式的多 Agent 系统
-2. **对比题**：跑通 AutoGen 和 CrewAI 的官方示例，对比体验差异
+2. **对比题**：跑通 Microsoft Agent Framework 和 CrewAI 的官方示例，对比体验差异
 3. **思考题**：什么场景下竞争辩论模式比协作模式更有效？
 

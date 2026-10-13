@@ -16,8 +16,14 @@ load_dotenv()
 class ChatAgent:
     """带记忆的聊天 Agent"""
     
-    def __init__(self, model: str = "gpt-4o"):
-        self.llm = ChatOpenAI(model=model, temperature=0.7)
+    def __init__(self, model: str | None = None):
+        model = model or os.getenv("LLM_MODEL_NAME", "gpt-5.5")
+        self.llm = ChatOpenAI(
+            model=model,
+            temperature=0.7,
+            api_key=os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY"),
+            base_url=os.getenv("LLM_BASE_URL") or os.getenv("OPENAI_API_BASE"),
+        )
         self.history: List[BaseMessage] = []
     
     def chat(self, message: str) -> str:

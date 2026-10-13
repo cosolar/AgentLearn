@@ -46,7 +46,12 @@ def get_weather(city: str) -> str:
 
 def create_agent_with_tools():
     """创建带工具的 Agent"""
-    llm = ChatOpenAI(model="gpt-4o", temperature=0)
+    llm = ChatOpenAI(
+        model=os.getenv("LLM_MODEL_NAME", "gpt-5.5"),
+        temperature=0,
+        api_key=os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY"),
+        base_url=os.getenv("LLM_BASE_URL") or os.getenv("OPENAI_API_BASE"),
+    )
     
     # 获取所有工具
     tools: List[BaseTool] = [search_web, calculate, get_weather]

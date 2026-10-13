@@ -1,0 +1,38 @@
+name: docs-check
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 校验文档（链接 / 代码块 / 结构）
+        run: python scripts/check_docs.py
+
+      - name: 运行 mini-harness 离线自检
+        working-directory: examples/09-mini-harness
+        run: python smoke_test.py
+
+      - name: 运行 RAG 知识库离线自检
+        working-directory: examples/05-rag-kb
+        run: python smoke_test.py
+
+      - name: 运行 API 服务离线自检
+        working-directory: examples/07-api-service
+        run: python smoke_test.py
+
+      - name: 校验示例与源码语法
+        run: |
+          python -m compileall -q examples src

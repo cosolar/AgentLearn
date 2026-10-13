@@ -40,3 +40,7 @@ documents/
 
 # AtomCode 工作文件
 .atomcode/
+
+# RAG example 本地向量库
+.chroma/
+/.workbuddy-ai/

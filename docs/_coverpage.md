@@ -11,16 +11,16 @@
 
 <p class="cover-subtitle">AI Agent <span class="highlight-text">从零开始构建智能体</span></p>
 
-<p class="cover-desc">全面 · 系统 · 开源  —  LangChain v1 + LangGraph 1.1 + Agent Harness</p>
+<p class="cover-desc">全面 · 系统 · 开源  —  LangChain v1 + LangGraph 1.2 + Agent Harness</p>
 
 <div class="cover-stats">
   <div class="stat-item">
     <span class="stat-num">9</span>
-    <span class="stat-label">大章节</span>
+    <span class="stat-label">大部分</span>
   </div>
   <div class="stat-divider"></div>
   <div class="stat-item">
-    <span class="stat-num">65+</span>
+    <span class="stat-num">75+</span>
     <span class="stat-label">篇教程</span>
   </div>
   <div class="stat-divider"></div>
@@ -41,7 +41,7 @@
     <img src="https://img.shields.io/badge/langchain-v1.x-orange.svg?style=flat-square" alt="LangChain"/>
   </a>
   <a href="https://docs.langchain.com/oss/python/langgraph/overview">
-    <img src="https://img.shields.io/badge/langgraph-v1.1+-purple.svg?style=flat-square" alt="LangGraph"/>
+    <img src="https://img.shields.io/badge/langgraph-v1.2+-purple.svg?style=flat-square" alt="LangGraph"/>
   </a>
   <a href="https://modelcontextprotocol.io">
     <img src="https://img.shields.io/badge/MCP-2026--07--28-8A2BE2.svg?style=flat-square" alt="MCP"/>
@@ -49,8 +49,9 @@
 </div>
 
 <div class="cover-actions">
-  <a class="btn-primary" href="#/01-intro/01-agent-intro">📖 开始阅读</a>
-  <a class="btn-secondary" href="https://github.com/cosolar/AgentLearn.git">⭐GitHub</a>
+  <a class="btn-primary" href="#/知识库大纲">📐 知识库大纲</a>
+  <a class="btn-secondary" href="#/01-入门基础/01-AI-Agent导论">📖 开始阅读</a>
+  <a class="btn-secondary" href="https://gitcode.com/mininote/AgentLearn">⭐GitCode</a>
 </div>
 
 <div class="cover-scroll">

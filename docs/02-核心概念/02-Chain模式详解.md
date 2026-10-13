@@ -1,23 +1,29 @@
-# 2.2 Chain 模式详解 —— 用管道连接智能
+# 2.2 Chain 模式详解 —— LCEL、Runnable 协议与确定性工作流
+
+> 📅 更新至 2026-10 · 技术栈基线见 [知识库大纲](../知识库大纲.md)
 
 ## 📖 导读
 
-> **单独的 LLM 调用就像一个能干的员工，但真正的生产力来自于将多个步骤组合成工作流。**
+> **一句话结论**：Chain 是 LangChain 用 **LCEL（LangChain Expression Language）** 把多个组件用 `|` 串起来的**声明式工作流**；在 v1 中，**确定性流程用 LCEL，自主决策交给 `create_agent`**——二者分工明确，不是替代关系。
 
-Chain（链）是 LangChain 的核心设计模式，它将多个组件（LLM调用、数据处理、工具使用等）按顺序连接，形成一个完整的处理流程。**理解 Chain，你就掌握了 Agent 开发的骨架。**
+- **前置阅读**：[2.1 Prompt 与上下文工程](./01-Prompt与上下文工程.md)。
+- **本章你将学到**：
+  1. Chain 的价值与 LCEL 的设计思想；
+  2. **Runnable 协议**（统一的 `invoke/batch/stream` 接口与组合原语）；
+  3. 顺序、并行、分支、**回退（fallback）** 四类工作流的写法；
+  4. **LCEL 在 LangChain v1 中的定位**——为什么它管"确定性流程"，而 Agent 的循环由 `create_agent` 封装；
+  5. 常见错误与排查。
 
 ---
 
 ## 一、前置知识
 
-在学习 Chain 之前，你需要熟悉以下概念：
-
 | 概念 | 说明 |
 |------|------|
-| **LLM** | 大语言模型，Chain 中的核心处理单元 |
+| **LLM** | Chain 中的核心处理单元 |
 | **Prompt Template** | 带变量的提示模板，`{variable}` 形式占位 |
-| **Output Parser** | 解析 LLM 输出为结构化数据 |
-| **管道操作符 `\|`** | LangChain 表达语言（LCEL）的连接操作符 |
+| **Output Parser** | 把 LLM 输出解析为字符串/结构化数据 |
+| **管道操作符 `\|`** | LCEL 的连接符，`a \| b` 表示"a 的输出喂给 b" |
 
 ---
 
@@ -25,419 +31,343 @@ Chain（链）是 LangChain 的核心设计模式，它将多个组件（LLM调�
 
 ### 2.1 直观理解
 
-```text
-一个 Chain 就像一条生产线：
+Chain 就像一条生产线：
 
+```
 输入 → [预处理] → [LLM 处理] → [后处理] → 输出
 ```
 
-每个环节处理完，把结果交给下一个环节，**上一个环节的输出就是下一个环节的输入**。
+**上一个环节的输出，就是下一个环节的输入。**
 
 ### 2.2 为什么要用 Chain？
 
 | 场景 | 单独调用 LLM | 使用 Chain |
 |------|-------------|------------|
 | 简单问答 | ✅ 够用 | ⚠️ 可能过度设计 |
-| 多步骤任务 | ❌ 需要手动拼接多个调用 | ✅ Chain 自动串联 |
-| 数据转换 | ❌ 需要自己写转换逻辑 | ✅ LCEL 内置支持 |
-| 错误处理 | ❌ 需要手动 try-catch | ✅ 统一错误处理 |
+| 多步骤任务 | ❌ 需手动拼接 | ✅ 自动串联 |
+| 数据转换 | ❌ 需自写逻辑 | ✅ 内置组合原语 |
 | 可测试性 | ⚠️ 一般 | ✅ 每个环节可独立测试 |
+| 可观测性 | ⚠️ 一般 | ✅ 每步输入输出可追踪 |
 
 ### 2.3 Chain 的核心优势
 
-1. **声明式**：用 `|` 描述流程，而非写 if-else
-2. **可组合**：小的 Chain 可以组合成大的 Chain
-3. **可观测**：每个环节的输入输出都可追踪
-4. **类型安全**：Parser 确保输出符合预期格式
+1. **声明式**：用 `|` 描述流程，而非 if-else；
+2. **可组合**：小 Chain 可组合成大 Chain；
+3. **统一接口**：所有组件都实现 Runnable 协议，可无缝拼接；
+4. **天然支持流式/批量/异步**：无需为每种能力重写代码。
 
 ---
 
-## 三、Chain 的核心组件
+## 三、Runnable 协议（核心）
 
-### 3.1 Prompt Template（提示模板）
+LCEL 的基石是 **Runnable 协议**：只要一个对象实现了 Runnable 接口，就能用 `|` 连接。`ChatModel`、`PromptTemplate`、`OutputParser`、`Retriever` 都是 Runnable。
+
+### 3.1 统一调用接口
+
+| 方法 | 作用 | 是否流式 |
+|------|------|----------|
+| `invoke(input)` | 处理单个输入，返回完整结果 | ❌ |
+| `batch(inputs)` | 批量处理，返回结果列表 | ❌ |
+| `stream(input)` | 流式返回结果块 | ✅ |
+| `ainvoke / abatch / astream` | 上述方法的异步版本 | 异步 |
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_openai import ChatOpenAI
 
-# 无变量模板
-prompt_simple = ChatPromptTemplate.from_messages([
-    ("system", "你是一个 AI 助手。"),
-    ("human", "你好"),
-])
+llm = ChatOpenAI(model="gpt-5.5", temperature=0)
+prompt = ChatPromptTemplate.from_template("用一句话解释：{topic}")
+chain = prompt | llm | StrOutputParser()
 
-# 带变量模板（核心用法）
+print(chain.invoke({"topic": "什么是 LCEL"}))                 # 单次
+print(chain.batch([{"topic": "A"}, {"topic": "B"}]))         # 批量
+for chunk in chain.stream({"topic": "流式输出"}):             # 流式
+    print(chunk, end="", flush=True)
+```
+
+### 3.2 组合原语
+
+| 原语 | 作用 | 典型用途 |
+|------|------|----------|
+| `RunnableSequence`（`a \| b`） | 顺序执行 | 串行流程 |
+| `RunnableParallel` | 并行执行，输出合并为字典 | 一次输入、多路处理 |
+| `RunnablePassthrough` | 原样透传输入 | 保留原始输入与中间结果 |
+| `RunnableLambda` | 包装任意 Python 函数 | 自定义处理步骤 |
+| `RunnableBranch` | 条件分支 | 按规则路由 |
+| `.with_fallbacks()` | 失败时回退到备用链 | 容错、多模型兜底 |
+| `.with_retry()` | 自动重试 | 处理瞬时网络抖动 |
+
+---
+
+## 四、核心组件
+
+### 4.1 Prompt Template
+
+```python
+from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
+
+# 带变量的消息模板（推荐）
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "你是一个{role}。请用{language}回答用户问题。"),
+    ("system", "你是一个{role}。请用{language}回答。"),
     ("human", "{input}"),
 ])
 
-# 使用模板
-formatted = prompt.invoke({
-    "role": "Python 专家",
-    "language": "中文",
-    "input": "什么是装饰器？"
-})
+messages = prompt.invoke({"role": "Python 专家", "language": "中文", "input": "什么是装饰器？"})
+print(messages.to_messages())
 ```
 
-**模板中常用的变量**：
-
-| 变量 | 用途 | 示例 |
-|------|------|------|
-| `{input}` | 用户输入 | 问题、指令 |
-| `{context}` | 上下文信息 | 文档、对话历史 |
-| `{role}` | 角色设定 | 专家身份 |
-| `{format}` | 输出格式 | JSON、Markdown |
-
-### 3.2 Output Parser（输出解析器）
-
-让 LLM 的输出**可被程序直接使用**。
+### 4.2 Output Parser
 
 ```python
-from langchain_core.output_parsers import StrOutputParser, CommaSeparatedListOutputParser
-from langchain_core.output_parsers import JsonOutputParser, PydanticOutputParser
-from pydantic import BaseModel
+from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
 
-# 1. 字符串解析器（最常用）
-str_parser = StrOutputParser()
-# 作用：从 AIMessage 对象中提取 .content 字符串
+str_parser = StrOutputParser()      # AIMessage → str（最常用）
+json_parser = JsonOutputParser()    # 文本 → dict
 
-# 2. 逗号分隔列表解析器
-list_parser = CommaSeparatedListOutputParser()
-# 输入："苹果,香蕉,橙子"
-# 输出：["苹果", "香蕉", "橙子"]
-
-# 3. JSON 解析器
-json_parser = JsonOutputParser()
-# 输入：'{"name": "小明", "age": 18}'
-# 输出：{"name": "小明", "age": 18}
-
-# 4. Pydantic 解析器（推荐，带类型校验）
-class Person(BaseModel):
-    name: str
-    age: int
-
-pydantic_parser = PydanticOutputParser(pydantic_object=Person)
-```
-
-### 3.3 使用 LCEL 连接组件
-
-LangChain Expression Language（LCEL）用 `|` 操作符将组件串联。**在 LangChain v1 中，LCEL 依然是构建"确定性工作流"的推荐方式**；而需要"自主决策 + 循环"的场景，则交给 LangGraph（见第 4 章）。
-
-```python
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-
-# 初始化组件
-llm = ChatOpenAI(model="gpt-5.5", temperature=0)
-
-# 定义模板
-prompt = ChatPromptTemplate.from_template(
-    "请将以下内容翻译成{target_language}：{text}"
-)
-
-# 创建 parser
-parser = StrOutputParser()
-
-# 用 | 连接成 Chain
-chain = prompt | llm | parser
-
-# 一行调用
-result = chain.invoke({
-    "target_language": "中文",
-    "text": "Hello, welcome to the world of AI Agents!"
-})
-print(result)  # 你好，欢迎来到 AI Agent 的世界！
+# 需要带类型校验的结构化输出时，优先用 v1 的 response_format=ToolStrategy(...)
+# （见 2.1），而不是 PydanticOutputParser。
 ```
 
 ---
 
-## 四、实战：构建多种 Chain
+## 五、实战：四类工作流
 
-### 4.1 简单文本处理 Chain
+### 5.1 顺序 Chain
 
-```python
-from langchain_core.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnableParallel, RunnablePassthrough
-
-llm = ChatOpenAI(model="gpt-5.5", temperature=0.3)
-
-# 一个简单的摘要 Chain
-summarize_prompt = PromptTemplate.from_template(
-    "请用一句话总结以下内容：\n\n{text}"
-)
-
-summarize_chain = summarize_prompt | llm | StrOutputParser()
-
-# 执行
-summary = summarize_chain.invoke({
-    "text": "AI Agent 是一种能够自主感知环境、理解意图、做出决策并采取行动的智能软件系统..."
-})
-print(summary)
-```
-
-### 4.2 顺序 Chain
-
-多个 Chain 串联，前一个的输出作为后一个的输入。
-
-```python
-# Chain 1: 生成大纲
-outline_prompt = PromptTemplate.from_template(
-    "为以下主题生成一个文章大纲（3-5个点）：\n{theme}"
-)
-outline_chain = outline_prompt | llm | StrOutputParser()
-
-# Chain 2: 根据大纲写文章
-article_prompt = PromptTemplate.from_template(
-    "根据以下大纲，写一篇完整的文章：\n\n{outline}"
-)
-article_chain = article_prompt | llm | StrOutputParser()
-
-# 组合成顺序 Chain
-full_chain = outline_chain | article_chain
-
-# 执行
-result = full_chain.invoke({"theme": "为什么 AI Agent 是未来的趋势"})
-print(result)
-```
-
-### 4.3 并行 Chain
-
-同时处理多个任务，最后合并结果。
-
-```python
-# 定义三个独立的处理链
-chain_analysis = prompt_analysis | llm | StrOutputParser()
-chain_summary = prompt_summary | llm | StrOutputParser()
-chain_keywords = prompt_keywords | llm | StrOutputParser()
-
-# 并行执行
-parallel_chain = RunnableParallel(
-    analysis=chain_analysis,
-    summary=chain_summary,
-    keywords=chain_keywords,
-)
-
-# 输入一次，三个结果
-results = parallel_chain.invoke({"text": "某篇长文章..."})
-print(results["analysis"])
-print(results["summary"])
-print(results["keywords"])
-```
-
-### 4.4 带条件分支的 Chain
-
-根据中间结果决定下一步走向。
-
-```python
-def route_by_sentiment(text: str) -> Runnable:
-    """根据情感倾向选择不同的处理链"""
-    # 先做一个简单的情感分析
-    sentiment_chain = (
-        PromptTemplate.from_template("判断情感是正面还是负面：{text}")
-        | llm
-        | StrOutputParser()
-    )
-    sentiment = sentiment_chain.invoke({"text": text})
-    
-    if "正面" in sentiment:
-        return positive_chain  # 正面 → 推荐处理
-    else:
-        return negative_chain  # 负面 → 投诉处理
-
-# 使用 RunnableBranch 实现
-from langchain_core.runnables import RunnableBranch
-
-branch = RunnableBranch(
-    (lambda x: "投诉" in x, complaint_chain),
-    (lambda x: "咨询" in x, inquiry_chain),
-    default_chain,  # 兜底
-)
-```
-
-### 4.5 流式输出 Chain
-
-让 LLM 的回复**一个字一个字地出现**，提升用户体验。
+前一个的输出作为后一个的输入：
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_openai import ChatOpenAI
 
+llm = ChatOpenAI(model="gpt-5.5", temperature=0.3)
+parser = StrOutputParser()
+
+outline_chain = (
+    ChatPromptTemplate.from_template("为以下主题生成 3-5 点的文章大纲：\n{theme}")
+    | llm | parser
+)
+article_chain = (
+    ChatPromptTemplate.from_template("根据以下大纲写一篇完整文章：\n\n{outline}")
+    | llm | parser
+)
+
+# 组合成顺序 Chain：outline_chain 的输出直接喂给 article_chain
+full_chain = outline_chain | article_chain
+
+print(full_chain.invoke({"theme": "为什么 AI Agent 是未来趋势"}))
+```
+
+> 💡 注意 `outline_chain` 输出的是**字符串**，而 `article_chain` 的模板需要 `{outline}`。LCEL 会自动把字符串映射到模板中同名的唯一变量，因此能直接串联。
+
+### 5.2 并行 Chain
+
+一次输入，多路处理，结果合并为字典：
+
+```python
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnableParallel, RunnablePassthrough
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-5.5", temperature=0)
+parser = StrOutputParser()
+
+analysis = ChatPromptTemplate.from_template("分析以下文本的结构：\n{text}") | llm | parser
+summary = ChatPromptTemplate.from_template("用一句话总结：\n{text}") | llm | parser
+keywords = ChatPromptTemplate.from_template("提取 5 个关键词：\n{text}") | llm | parser
+
+# RunnablePassthrough 保留原始 text，三路并行共享同一输入
+parallel = RunnableParallel(
+    original=RunnablePassthrough(),
+    analysis=analysis,
+    summary=summary,
+    keywords=keywords,
+)
+
+results = parallel.invoke({"text": "某篇长文章……"})
+print(results["summary"])
+print(results["keywords"])
+print(results["original"]["text"])   # 原始输入仍可访问
+```
+
+### 5.3 条件分支 Chain
+
+根据输入或中间结果决定走哪条路。用 `RunnableBranch` 声明式实现：
+
+```python
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnableBranch, RunnableLambda
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-5.5", temperature=0)
+parser = StrOutputParser()
+
+def make_chain(role: str):
+    return ChatPromptTemplate.from_template(f"你是{role}，请回应：{{input}}") | llm | parser
+
+complaint_chain = make_chain("投诉处理专员")
+inquiry_chain = make_chain("售前咨询顾问")
+default_chain = make_chain("通用客服")
+
+branch = RunnableBranch(
+    (lambda x: "投诉" in x["input"], complaint_chain),
+    (lambda x: "咨询" in x["input"], inquiry_chain),
+    default_chain,          # 兜底：以上都不匹配时走这里
+)
+
+print(branch.invoke({"input": "我要投诉你们的物流"}))
+print(branch.invoke({"input": "这个功能怎么用？"}))
+```
+
+> ⚠️ 复杂的分支/循环（尤其是需要回边的图）建议改用 **LangGraph**（见 [4.3 路由与循环](../04-LangGraph进阶/03-路由与循环.md)），LCEL 更适合"有向无环"的流程。
+
+### 5.4 回退与重试（容错）
+
+生产环境必须考虑"主模型挂了怎么办"。`.with_fallbacks()` 与 `.with_retry()` 是 LCEL 内置的容错能力：
+
+```python
+import os
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_openai import ChatOpenAI
+
+primary = ChatOpenAI(
+    model=os.getenv("LLM_MODEL_NAME", "gpt-5.5"),
+    api_key=os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY"),
+    base_url=os.getenv("LLM_BASE_URL") or os.getenv("OPENAI_API_BASE"),
+)
+backup = ChatOpenAI(model="gpt-5-mini", temperature=0)   # 备用模型
+
+prompt = ChatPromptTemplate.from_template("用一句话解释：{topic}")
+parser = StrOutputParser()
+
+chain = (
+    prompt
+    | primary.with_retry(stop_after_attempt=2)          # 先重试
+    | parser
+).with_fallbacks([prompt | backup | parser])            # 再回退
+
+print(chain.invoke({"topic": "LCEL 的容错机制"}))
+```
+
+| 能力 | 方法 | 说明 |
+|------|------|------|
+| **回退** | `.with_fallbacks([...])` | 主链抛错时依次尝试备用链 |
+| **重试** | `.with_retry(stop_after_attempt=n)` | 对瞬时错误自动重试 |
+
+### 5.5 流式输出
+
+```python
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-5.5", temperature=0.7)
 prompt = ChatPromptTemplate.from_messages([
     ("system", "你是一个故事讲述者。"),
     ("human", "讲一个关于{topic}的短故事"),
 ])
-
 chain = prompt | llm | StrOutputParser()
 
-# 流式调用
-print("🤖 AI 正在创作中...\n")
 for chunk in chain.stream({"topic": "一只会说话的猫"}):
-    print(chunk, end="", flush=True)
-# flush=True 让每个字符立刻显示，形成打字效果
+    print(chunk, end="", flush=True)   # flush 形成打字机效果
 ```
 
 ---
 
-## 五、进阶 Chain 模式
+## 六、LCEL 在 LangChain v1 中的定位
 
-### 5.1 带记忆的 Chain
+这是本章最重要的一节。**v1 把"确定性流程"和"自主决策"分成了两条路：**
 
-> ⚠️ **版本提示**：`ConversationChain`、`ConversationBufferMemory` 等旧的 Memory / Chain 类在 **LangChain v1** 中已迁移到 [`langchain-classic`](https://pypi.org/project/langchain-classic/)。新项目推荐**直接维护消息列表**，或用 LangGraph 的 **checkpointer** 做持久化（见 [第 4 章](../04-LangGraph进阶/01-LangGraph基础.md)）。
+| 维度 | LCEL（Chain） | `create_agent`（Agent） |
+|------|---------------|-------------------------|
+| **控制流** | 开发者预先定义 | LLM 运行时决定 |
+| **是否循环** | ❌ 无环（DAG） | ✅ 内置"模型↔工具"循环 |
+| **工具使用** | 手动编排 | 模型自主选择 |
+| **适用场景** | 步骤固定的流水线 | 不确定的多步任务 |
+| **可预测性** | 高 | 中（需护栏） |
 
-最轻量的"记忆"就是自己维护一个消息列表：
+**一句话选型**：
 
-```python
-from langchain_core.messages import HumanMessage
-from langchain_core.messages import trim_messages
+- 步骤**固定、可预测** → 用 **LCEL**；
+- 步骤**需要模型当场决定** → 用 **`create_agent`**；
+- 需要**复杂分支/循环/人工介入** → 用 **LangGraph**。
 
-messages = []  # 会话历史
+> 🆕 **v1 关键变化**：旧版的 `LLMChain`、`ConversationChain`、`ConversationBufferMemory` 等已迁往 [`langchain-classic`](https://pypi.org/project/langchain-classic/)。新项目里：
+> - 简单链 → 直接用 LCEL 组合（`prompt | llm | parser`）；
+> - 会话记忆 → 用 LangGraph 的 `checkpointer`（见 [2.4 记忆机制](./04-记忆机制.md)）；
+> - Agent → 用 `create_agent`（见 [2.3](./03-Agent核心架构.md)）。
 
-def chat(question: str) -> str:
-    messages.append(HumanMessage(content=question))
-    # 按 token 裁剪上下文，避免越聊越长
-    trimmed = trim_messages(messages, max_tokens=2000, strategy="last")
-    reply = llm.invoke(trimmed)
-    messages.append(reply)
-    return reply.content
-
-chat("我叫小明")
-print(chat("我叫什么名字？"))  # → 你叫小明
-```
-
-> 💡 需要**跨会话持久化**的记忆，建议使用 LangGraph 的 `checkpointer`（会话内）与 `store`（跨会话长期记忆），详见 [2.4 记忆机制](./04-记忆机制.md)。
-
-### 5.2 自定义 Runnable
-
-当内置组件不满足需求时，可以自定义处理函数。
-
-```python
-from langchain_core.runnables import RunnableLambda
-
-# 自定义数据清洗函数
-def clean_text(text: str) -> str:
-    """清洗文本：去空格、截断过长内容"""
-    text = text.strip()
-    if len(text) > 1000:
-        text = text[:1000] + "..."
-    return text
-
-# 自定义格式化函数
-def format_output(text: str) -> dict:
-    return {
-        "content": text,
-        "length": len(text),
-        "timestamp": "2024-01-01"
-    }
-
-# 组装自定义 Chain
-custom_chain = (
-    RunnableLambda(clean_text)
-    | prompt
-    | llm
-    | StrOutputParser()
-    | RunnableLambda(format_output)
-)
-
-result = custom_chain.invoke("  很长很长的输入文本...  ")
-print(result["content"])   # 处理后的内容
-print(result["length"])    # 内容长度
-```
-
-### 5.3 错误处理
-
-```python
-from langchain_core.runnables import RunnableConfig
-import time
-
-# 添加重试逻辑
-def retry_on_fail(func):
-    def wrapper(*args, **kwargs):
-        max_retries = 3
-        for i in range(max_retries):
-            try:
-                return func(*args, **kwargs)
-            except Exception as e:
-                if i == max_retries - 1:
-                    raise e
-                time.sleep(1)  # 等待1秒后重试
-    return wrapper
-
-chain_with_retry = RunnableLambda(retry_on_fail(lambda x: x)) | prompt | llm | StrOutputParser()
-```
-
----
-
-## 六、Chain 的适用场景
-
-| 场景 | 推荐 Chain 类型 | 原因 |
-|------|-----------------|------|
-| 翻译应用 | 简单 LCEL Chain | 输入翻译，输出结果 |
-| 文章生成器 | 顺序 Chain | 先生成大纲，再写全文 |
-| 内容审核系统 | 并行 Chain | 同时审核敏感词、格式、版权 |
-| 客服机器人 | 条件分支 Chain | 根据意图走不同流程 |
-| 数据分析报告 | 自定义 Runnable | 需要数据清洗+分析+格式化 |
+**二者是协作关系**：典型生产架构是"**Agent 负责决策，LCEL 负责执行**"——把确定性的后处理（格式化、校验、落库）做成 LCEL 链，嵌在 Agent 的工具或中间件里。
 
 ---
 
 ## 七、常见问题与排查
 
-### ❌ invoke() 参数错误
+### ❌ `invoke()` 参数类型错误
 
 ```python
-# ❌ 错误：模板需要字典
+# ❌ 模板需要字典，却传了字符串
 chain.invoke("直接传字符串")
 
-# ✅ 正确：传字典
+# ✅ 正确
 chain.invoke({"input": "用户输入", "role": "专家"})
 ```
 
-### ❌ Chain 连接顺序错误
+### ❌ 连接顺序错误
 
 ```python
-# ❌ 错误：LLM 不能直接接 PromptTemplate
-Chain = llm | prompt
+# ❌ LLM 的输出不是消息模板，接不上
+bad = llm | prompt
 
-# ✅ 正确：先模板 → 再 LLM → 最后 Parser
-Chain = prompt | llm | parser
+# ✅ 正确：模板 → LLM → Parser
+good = prompt | llm | parser
 ```
 
 ### ❌ 输出解析失败
 
 ```python
-# 如果 LLM 输出不符合 parser 的格式预期
-# 在 Prompt 中明确指定输出格式
+# 原因：LLM 输出不符合 parser 预期格式
+# 解决 1：在 Prompt 中明确要求格式
+# 解决 2：需要结构化时，改用 response_format=ToolStrategy(Model)（v1 推荐）
+```
 
-prompt = PromptTemplate.from_template(
-    """严格按 JSON 格式输出，不要包含其他内容：
-    
-    主题：{topic}
-    
-    {{"title": "标题", "summary": "摘要"}}
-    """
-)
+### ❌ `RunnableBranch` 报 "no default"
+
+```python
+# 必须提供兜底分支（最后一个位置参数）
+branch = RunnableBranch((cond1, chain1), (cond2, chain2), default_chain)
 ```
 
 ---
 
-## 八、本章总结
+## 本章小结
 
-| 概念 | 一句话说明 |
-|------|------------|
-| **Chain** | 用 `\|` 连接多个组件的处理流程 |
-| **LCEL** | LangChain 表达语言，声明式定义 Chain |
-| **Prompt Template** | 带变量的提示模板 |
-| **Output Parser** | 将 LLM 回复解析为结构化数据 |
-| **顺序 Chain** | 前一个输出是后一个输入 |
-| **并行 Chain** | 同时执行多个独立处理 |
-| **RunnableLambda** | 自定义处理函数 |
+| 概念 | 说明 |
+|------|------|
+| **Chain / LCEL** | 用 `\|` 声明式连接多个 Runnable 组件 |
+| **Runnable 协议** | 统一 `invoke/batch/stream`（+ 异步）接口 |
+| **顺序** | `a \| b`，前一个输出喂给后一个 |
+| **并行** | `RunnableParallel`，一次输入、多路处理 |
+| **透传** | `RunnablePassthrough`，保留原始输入 |
+| **分支** | `RunnableBranch`，必须带兜底分支 |
+| **回退/重试** | `.with_fallbacks()` / `.with_retry()` |
+| **v1 定位** | 确定性流程用 LCEL，自主决策用 `create_agent`，复杂编排用 LangGraph |
 
 ---
 
 ## 📝 课后练习
 
-1. **✅ 基础**：实现一个"翻译 + 总结"的顺序 Chain：先翻译英文文章为中文，再总结中文内容
-2. **💡 进阶**：实现一个并行 Chain：对一篇文章同时做"情感分析"和"关键词提取"
-3. **🚀 挑战**：实现一个带条件分支的客服 Chain：如果用户输入包含"投诉"，走投诉处理链；包含"咨询"，走咨询链；其他走默认回复
-4. **🔍 探索**：在 LangChain 官方文档中查找 `RunnableParallel` 和 `RunnablePassthrough` 的官方示例
+**基础**
+1. 实现一个"翻译 + 总结"的顺序 Chain：先把英文文章翻译成中文，再总结中文内容。
+
+**进阶**
+2. 实现一个并行 Chain：对一篇文章同时做"情感分析"和"关键词提取"，并保留原文输出。
+
+**挑战**
+3. 实现一个带**回退**的客服 Chain：主模型用 `gpt-5.5`，备用模型用 `gpt-5-mini`，用 `.with_fallbacks()` 保证主模型不可用时自动降级；再叠加条件分支（含"投诉"走投诉链）。
+4. 用一句话回答：为什么"需要模型自己决定调几次工具"的任务不适合用纯 LCEL 实现？请结合"有环 vs 无环"说明。

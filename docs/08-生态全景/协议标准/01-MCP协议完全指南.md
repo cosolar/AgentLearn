@@ -260,7 +260,7 @@ agent = create_agent(
 ## 八、MCP 生态
 
 - **官方 SDK**：TypeScript、Python、Go、C#（Tier 1），Rust（beta）
-- **Server 数量**：官方 + 社区已达**十万级**
+- **Server 数量**：官方注册表已收录近万个，第三方索引统计已超过一万个，数量仍在快速增长
 - **平台支持**：Amazon Bedrock AgentCore、Cloudflare Workers、Microsoft Foundry、Google Cloud 等均已支持新规范
 - **常见 Server**：文件系统、GitHub、数据库、浏览器、Slack、Notion、搜索等
 

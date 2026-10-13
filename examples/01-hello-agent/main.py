@@ -14,11 +14,19 @@ from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage
 load_dotenv()
 
 
-def create_agent(model: str = "gpt-4o"):
-    """创建 Agent"""
+def create_agent(model: str | None = None):
+    """创建 Agent。
+
+    模型名与密钥统一从环境变量读取，便于在 OpenAI / DeepSeek / 通义之间切换：
+      LLM_MODEL_NAME（默认 gpt-5.5）
+      LLM_API_KEY / LLM_BASE_URL（缺省时回退到 OPENAI_API_KEY / OPENAI_API_BASE）
+    """
+    model = model or os.getenv("LLM_MODEL_NAME", "gpt-5.5")
     llm = ChatOpenAI(
         model=model,
         temperature=0.7,
+        api_key=os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY"),
+        base_url=os.getenv("LLM_BASE_URL") or os.getenv("OPENAI_API_BASE"),
     )
     return llm
 
