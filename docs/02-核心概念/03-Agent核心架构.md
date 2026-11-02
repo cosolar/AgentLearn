@@ -1,7 +1,5 @@
 # 2.3 Agent 核心架构 —— ReAct 循环与 create_agent + Middleware
 
-> 📅 更新至 2026-10 · 技术栈基线见 [教程大纲](../教程大纲.md)
-
 ## 📖 导读
 
 > **一句话结论**：Agent 的本质是一个 **"思考 → 行动 → 观察"（TAO / ReAct）循环**；在 LangChain v1 中，这个循环由 **`create_agent` 自动封装**，你用 **Middleware** 控制它的行为，用**终止条件**控制它的边界。

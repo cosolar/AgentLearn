@@ -1,12 +1,18 @@
 # 7.1 API 服务部署 —— 把 Agent 变成一个真正的后端服务
 
-> 📅 更新至 2026-10 · 技术栈基线见 [教程大纲](../教程大纲.md)
-
 ## 📖 导读
 
-> **交互式脚本里的 Agent 只是玩具。真正的产品是一个 7×24 小时运行、能并发、能鉴权、能限流的后端服务。**
+> **一句话结论**：**交互式脚本里的 Agent 只是玩具。真正的产品是一个 7×24 小时运行、能并发、能鉴权、能限流的后端服务。**
 
 本章把 `create_agent` 构建的 Agent 封装成**标准 REST API**：用 **FastAPI** 提供 HTTP 接口，用 **SSE** 做流式输出，并补齐**鉴权、限流、错误契约**三块生产必备能力。前端、移动端、其他微服务都能以语言无关的方式调用。
+
+- **前置阅读**：[3.4 构建聊天 Agent](../03-LangChain实战/04-构建聊天Agent.md)。
+- **本章你将学到**：
+  1. 为什么要封装成服务：并发、鉴权、可运维
+  2. FastAPI + 请求/响应模型 + 统一错误契约
+  3. SSE 流式：协议细节与前端对接
+  4. 鉴权与限流的最小可用实现
+  5. 生产配置：worker、超时、优雅关闭
 
 ---
 
@@ -500,8 +506,7 @@ uv run uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4 --log-level warni
 
 > 💻 **配套代码**：完整可运行版本见 [`examples/07-api-service/`](../../examples/07-api-service/)。其中 `python smoke_test.py` 可**离线自检 16 项**（鉴权 / 限流 / SSE，无需 fastapi 与 API Key），启动后可用 `curl` 直接验证 `/health`、`/chat`、`/chat/stream` 三个端点。
 
-## 十一、本章小结
-
+## 本章小结
 | 组件 | 说明 |
 |------|------|
 | **config.py** | `pydantic-settings` 统一读取 `LLM_*` 与服务配置 |
@@ -518,7 +523,15 @@ uv run uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4 --log-level warni
 
 ## 📝 课后练习
 
-1. **✅ 基础**：启动服务，用 `/docs` 调用 `/chat` 与 `/chat/stream`，观察流式输出。
-2. **💡 改进**：把 `RateLimiter` 换成 Redis 实现，使多 worker 共享限流状态。
-3. **🚀 挑战**：把 `InMemorySaver` 换成 `PostgresSaver`，实现跨重启的会话持久化。
-4. **🔍 探索**：用 Locust 或 `ab` 压测 `/chat`，观察并发下的 P95 延迟与错误率。
+**基础**
+
+1. 启动服务，用 `/docs` 调用 `/chat` 与 `/chat/stream`，观察流式输出。
+
+**进阶**
+
+2. 把 `RateLimiter` 换成 Redis 实现，使多 worker 共享限流状态。
+
+**挑战**
+
+3. 把 `InMemorySaver` 换成 `PostgresSaver`，实现跨重启的会话持久化。
+4. 用 Locust 或 `ab` 压测 `/chat`，观察并发下的 P95 延迟与错误率。

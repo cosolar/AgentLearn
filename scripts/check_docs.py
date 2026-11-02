@@ -35,11 +35,16 @@ LINK_RE = re.compile(r"\]\(([^)]+)\)")
 FENCE_RE = re.compile(r"```[^\n]*\n.*?```", re.DOTALL)
 PY_BLOCK_RE = re.compile(r"```(?:python|py)[^\n]*\n(.*?)```", re.DOTALL)
 
+# 五段式结构的三个固定锚点（用词见 docs/教程大纲.md 7.1）。
+# 这里只认规范用词，同义词不再放行——避免"本章目标/本章总结"这类漂移。
 STRUCTURE_HINTS = {
-    "导读": ("📖 导读", "📖 本章目标", "## 导读", "本章目标"),
-    "小结": ("本章小结", "本章总结", "## 小结", "## 总结"),
-    "练习": ("课后练习", "📝 练习", "## 练习"),
+    "📖 导读": ("## 📖 导读",),
+    "本章小结": ("## 本章小结",),
+    "📝 课后练习": ("## 📝 课后练习",),
 }
+
+# 导读里必须出现的三个小标题（见 docs/教程大纲.md 7.1）
+LEAD_MARKS = ("一句话结论", "前置阅读", "本章你将学到")
 
 
 def iter_markdown() -> list[Path]:
@@ -157,6 +162,11 @@ def check_structure() -> int:
         checked += 1
         lacks = [k for k, hints in STRUCTURE_HINTS.items()
                  if not any(h in text for h in hints)]
+        # 导读三件套：只在「## 📖 导读」到下一个 --- 之间找，避免正文误命中
+        lead = re.search(r"## 📖 导读\n(.*?)\n---\n", text, re.S)
+        if lead:
+            body = lead.group(1)
+            lacks += [f"导读·{m}" for m in LEAD_MARKS if m not in body]
         if lacks:
             missing.append((str(rel), lacks))
 

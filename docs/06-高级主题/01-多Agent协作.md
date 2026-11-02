@@ -1,12 +1,18 @@
 # 6.1 多 Agent 协作 —— 从单打独斗到团队作战
 
-> 📅 更新至 2026-10 · 技术栈基线见 [教程大纲](../教程大纲.md)
-
 ## 📖 导读
 
-> **一个 Agent 是聪明的，一群分工明确的 Agent 可以是智能的——但前提是你真的需要一群人。**
+> **一句话结论**：**一个 Agent 是聪明的，一群分工明确的 Agent 可以是智能的——但前提是你真的需要一群人。**
 
 在 LangChain v1 里，构建一个 Agent 只要一个 `create_agent`；当任务复杂到"一个 Agent 忙不过来"时，我们才会引入**多 Agent 协作**。本节聚焦工程实践：**什么时候该拆、怎么拆、用什么编排**。所有可运行代码均基于 `langchain.agents.create_agent` + **LangGraph**（supervisor / handoff / 群聊 / `Send` fan-out），不再依赖旧版手写执行器与 ReAct 构建方式。
+
+- **前置阅读**：[3.4 构建聊天 Agent](../03-LangChain实战/04-构建聊天Agent.md)、[4.3 路由与循环](../04-LangGraph进阶/03-路由与循环.md)。
+- **本章你将学到**：
+  1. 先问“该不该拆”：榨干单 Agent 的三种办法
+  2. 四种协作拓扑与各自的适用场景
+  3. Supervisor 模式实战（多 Agent 内容工厂）
+  4. `Send` fan-out：map-reduce 并行研究
+  5. 群聊模式与 2026 年的多 Agent 协议
 
 ---
 
@@ -455,8 +461,7 @@ if __name__ == "__main__":
 
 ---
 
-## 九、本章小结
-
+## 本章小结
 | 知识点 | 一句话说明 |
 |--------|------------|
 | **先榨干单 Agent** | 大多数问题靠 Prompt / 工具 / 中间件就能解决，别急着拆 |
@@ -470,7 +475,15 @@ if __name__ == "__main__":
 
 ## 📝 课后练习
 
-1. **✅ 基础**：运行 Supervisor 示例，把主管 Prompt 改为"最多调用一次 reviewer"，观察输出变化。
-2. **💡 改进**：给 `researcher` 子 Agent 添加一个 `search_web` 工具（用 `create_agent(tools=[...])`），让研究基于真实检索。
-3. **🚀 挑战**：把 `Send` fan-out 的 `plan` 节点换成 LLM 动态拆解子主题，并用 `reducer` 归并结果。
-4. **🔍 探索**：为群聊加上"主持人选举下一位发言人"的机制（用 LLM 结构化输出决定 `next`），替代固定轮转。
+**基础**
+
+1. 运行 Supervisor 示例，把主管 Prompt 改为"最多调用一次 reviewer"，观察输出变化。
+
+**进阶**
+
+2. 给 `researcher` 子 Agent 添加一个 `search_web` 工具（用 `create_agent(tools=[...])`），让研究基于真实检索。
+
+**挑战**
+
+3. 把 `Send` fan-out 的 `plan` 节点换成 LLM 动态拆解子主题，并用 `reducer` 归并结果。
+4. 为群聊加上"主持人选举下一位发言人"的机制（用 LLM 结构化输出决定 `next`），替代固定轮转。

@@ -775,6 +775,20 @@
         title: '目录',
       },
 
+      // Mermaid 图表（```mermaid 代码块）
+      // 注意：startOnLoad 必须为 false，由 docsify-mermaid 在每次渲染后手动 run。
+      mermaid: {
+        startOnLoad: false,
+        theme: 'default',
+        securityLevel: 'loose',
+        flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+        sequence: { useMaxWidth: true, wrap: true },
+        themeVariables: {
+          fontFamily: "'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif",
+          fontSize: '14px',
+        },
+      },
+
       // TOC 增强插件：折叠 + 自动滚动
       // 必须用 concat 保留此前已注册的插件（docsify-copy-code 等），
       // 否则 Object.assign 会把 window.$docsify.plugins 整个覆盖掉，导致复制按钮等失效。
@@ -970,6 +984,11 @@
 
   <!-- 插件: 分页导航（上一章/下一章） -->
   <script src="https://cdn.jsdelivr.net/npm/docsify-pagination@2/dist/docsify-pagination.min.js"></script>
+
+  <!-- 图表: Mermaid（必须先加载 mermaid 本体，再加载 docsify-mermaid 适配器） -->
+  <!-- 版本锁定 @10：docsify-mermaid@2 与 mermaid 11 存在 API 差异（init 已移除），锁 10.x 最稳。 -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-mermaid@2/dist/docsify-mermaid.js"></script>
 
 </body>
 </html>

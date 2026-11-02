@@ -1,12 +1,18 @@
 # 4.5 实战：工作流 Agent —— 构建带人工审批的生产级系统
 
-> 📅 更新至 2026-10 · 技术栈基线见 [教程大纲](../教程大纲.md)
-
 ## 📖 导读
 
-> **本章把前四节综合起来，构建一个真正可用于生产的"内容创作工作流 Agent"——它包含子图、循环、持久化，并在发布前引入人工审批（HITL）。**
+> **一句话结论**：**本章把前四节综合起来，构建一个真正可用于生产的"内容创作工作流 Agent"——它包含子图、循环、持久化，并在发布前引入人工审批（HITL）。**
 
 我们要做的系统能：接收主题 → 自动调研 → 生成大纲 → 逐节写作 → 质量审查 → **暂停等待人工批准** → 输出最终内容。核心新增能力是 **中断/恢复（interrupt/resume）** 与 **持久化**，这正是 LangGraph 区别于普通 Chain 的地方。
+
+- **前置阅读**：[4.1](./01-LangGraph基础.md) – [4.4](./04-子图.md)（本章会同时用到状态、路由、子图）。
+- **本章你将学到**：
+  1. 内容创作工作流的完整状态设计
+  2. 把 `create_agent` 当成一个“节点”用（调研节点）
+  3. 中断/恢复：`interrupt` + `Command(resume=...)`
+  4. 生产级持久化：从 `InMemorySaver` 到 `SqliteSaver` / `PostgresSaver`
+  5. 工具级人工审批：中间件版 HITL
 
 ---
 
@@ -282,6 +288,28 @@ app.get_graph().print_ascii()
 
 ## 七、运行：中断 → 人工审批 → 恢复
 
+整条时间线是这样的（注意：**程序可以退出，状态不会丢**，因为 checkpointer 已经把它写盘了）：
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as 调用方
+    participant G as 工作流图
+    participant N as approval 节点
+
+    U->>G: app.invoke(initial, thread_id=content-001)
+    G->>G: research → outline → write → review
+    G->>N: 进入审批节点
+    N-->>U: interrupt(草稿预览 + 审批问题)
+    Note over U: 人看草稿，决定通过还是打回
+    U->>G: Command(resume=approved_true)
+    G->>N: 从 interrupt 处继续执行
+    N-->>G: 写回 approved 状态
+    G-->>U: 最终内容 + 完整状态
+
+    Note over U,G: 若打回，则回到 write 节点重写，<br/>直到通过或达到 max_revisions
+```
+
 ```python
 from langgraph.types import Command
 
@@ -426,8 +454,7 @@ result = guarded_agent.invoke(Command(resume=True), config)
 
 ---
 
-## 十一、本章小结
-
+## 本章小结
 | 要点 | 说明 |
 |------|------|
 | **子图 / 循环** | 研究、写作、审查各司其职，写作用循环逐节推进 |
@@ -442,7 +469,15 @@ result = guarded_agent.invoke(Command(resume=True), config)
 
 ## 📝 课后练习
 
-1. **✅ 基础**：运行本章工作流，观察 `__interrupt__` 的输出与恢复后的结果
-2. **💡 改进**：把 `write_section` 的占位文案换成真实 LLM 生成（提示词包含研究摘要）
-3. **🚀 挑战**：用 `Send` 把各章节写作改为**并行**，并用 `operator.add` 汇总草稿
-4. **🔍 探索**：把 `InMemorySaver` 换成 `SqliteSaver`，中断后**重启程序**再用同一 `thread_id` 恢复，验证状态是否还在
+**基础**
+
+1. 运行本章工作流，观察 `__interrupt__` 的输出与恢复后的结果
+
+**进阶**
+
+2. 把 `write_section` 的占位文案换成真实 LLM 生成（提示词包含研究摘要）
+
+**挑战**
+
+3. 用 `Send` 把各章节写作改为**并行**，并用 `operator.add` 汇总草稿
+4. 把 `InMemorySaver` 换成 `SqliteSaver`，中断后**重启程序**再用同一 `thread_id` 恢复，验证状态是否还在

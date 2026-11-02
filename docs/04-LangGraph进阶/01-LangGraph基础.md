@@ -1,10 +1,8 @@
 # 4.1 LangGraph 基础 —— 从线性链到图工作流
 
-> 📅 更新至 2026-10 · 技术栈基线见 [教程大纲](../教程大纲.md)
-
 ## 📖 导读
 
-> **现实世界的工作流不是线性的——它有分支、有循环、有条件判断，需要一个更强大的编排工具。**
+> **一句话结论**：**现实世界的工作流不是线性的——它有分支、有循环、有条件判断，需要一个更强大的编排工具。**
 
 前面学习的 Chain 是线性结构（A → B → C），适合确定性的简单流程。但很多复杂的 Agent 场景需要**条件分支**（如果 X 则走分支 A，否则走分支 B）、**循环**（不断重试直到成功）、**并行**等能力。这正是 **LangGraph** 的用武之地——它用**图（Graph）** 来描述工作流。
 
@@ -15,6 +13,14 @@ LangGraph 是**低层编排运行时（orchestration runtime）**。LangChain v1
 > ⚠️ **1.2+ 的两个包结构变化**（最容易踩的坑）：
 > 1. **`langgraph` 顶层不再导出 `StateGraph` 等符号**——必须从子模块导入：`from langgraph.graph import StateGraph, START, END`，**不能**写 `from langgraph import StateGraph`。
 > 2. **`langgraph.prebuilt` 已拆为独立发行包 `langgraph-prebuilt`**（它是 `langgraph` 的硬依赖，会自动装上）。`from langgraph.prebuilt import ToolNode, tools_condition` 写法不变；但如果你用 `--no-deps` 安装，需手动补 `langgraph-prebuilt`。
+
+- **前置阅读**：[2.2 Chain 模式详解](../02-核心概念/02-Chain模式详解.md)、[2.3 Agent 核心架构](../02-核心概念/03-Agent核心架构.md)。
+- **本章你将学到**：
+  1. 为什么 LCEL 不够：有环、有状态、要能恢复
+  2. 四个核心概念：State / Node / Edge / Compile
+  3. 第一个图：从 builder 到 `app.invoke`
+  4. 三种调用方式：`invoke` / `stream` / `astream` 的差别
+  5. LangGraph 1.2 的能力全景（持久化、HITL、子图）
 
 ---
 
@@ -421,8 +427,7 @@ builder.add_edge("a", "b")
 
 ---
 
-## 九、本章小结
-
+## 本章小结
 | 概念 | 一句话说明 |
 |------|------------|
 | **StateGraph** | 基于状态共享的图工作流框架 |
@@ -438,7 +443,15 @@ builder.add_edge("a", "b")
 
 ## 📝 课后练习
 
-1. **✅ 基础**：创建一个 3 个节点的顺序执行图（START→A→B→C→END），每个节点输出一句话
-2. **💡 观察**：使用 `app.get_graph().print_ascii()` 打印图的拓扑结构，并尝试 `draw_mermaid()` 生成 Mermaid 图
-3. **🚀 扩展**：在 State 中添加一个 `counter` 字段，每个节点将其值 +1，观察最终结果
-4. **🔍 探索**：用 `app.stream(..., stream_mode="updates")` 逐节点观察状态变化，再对比 `invoke` 的返回
+**基础**
+
+1. 创建一个 3 个节点的顺序执行图（START→A→B→C→END），每个节点输出一句话
+
+**进阶**
+
+2. 使用 `app.get_graph().print_ascii()` 打印图的拓扑结构，并尝试 `draw_mermaid()` 生成 Mermaid 图
+
+**挑战**
+
+3. 在 State 中添加一个 `counter` 字段，每个节点将其值 +1，观察最终结果
+4. 用 `app.stream(..., stream_mode="updates")` 逐节点观察状态变化，再对比 `invoke` 的返回

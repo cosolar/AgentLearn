@@ -1,12 +1,16 @@
 # 8.10 MCP 协议完全指南 —— Agent 工具连接的"USB-C"
 
-## 📖 本章目标
+## 📖 导读
 
-- 理解 MCP（Model Context Protocol）要解决的问题
-- 掌握 MCP 的架构、核心原语与传输方式
-- 了解 **2026-07-28 新规范** 的重大变化（无状态化）
-- 学会编写 MCP Server 并在 LangChain / LangGraph 中接入
-- 掌握 MCP 的安全实践
+> **一句话结论**：MCP 不是又一个插件标准，而是把「模型怎么连工具」从 N×M 次适配，压缩成一次实现、到处可用。
+
+- **前置阅读**：[3.2 模型调用与工具](../../03-LangChain实战/02-模型调用与工具.md)（先知道 `@tool` 长什么样）。
+- **本章你将学到**：
+  1. MCP 要解决的问题：工具适配的 N×M 爆炸
+  2. 三角色架构：Host / Client / Server 与三大核心原语
+  3. 传输方式：stdio 与 Streamable HTTP 怎么选
+  4. 2026-07-28 规范：无状态化、MRTR、列表缓存
+  5. 写一个 Server 并接入 LangChain，以及安全实践
 
 > 📅 内容同步至 **MCP 2026-07-28 规范**。
 
@@ -64,6 +68,29 @@
 | **Host** | 承载 Agent 的应用（IDE、桌面应用、你的服务） |
 | **Client** | Host 内部与单个 Server 通信的连接器 |
 | **Server** | 暴露工具/资源/提示词的服务 |
+
+上面的图讲的是**结构**，下面的时序图讲**一次工具调用实际发生了什么**：
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant H as Host（Agent 应用）
+    participant C as MCP Client
+    participant S as MCP Server
+
+    H->>C: 启动，为每个 Server 建一条连接
+    C->>S: initialize（协议版本 + 客户端能力）
+    S-->>C: 返回 serverInfo + 服务端能力
+    C->>S: notifications/initialized
+    C->>S: tools/list
+    S-->>C: 工具清单（列表结果可缓存）
+    H->>C: 模型决定调用 search_web
+    C->>S: tools/call（工具名 + 参数）
+    S-->>C: 结果（content blocks）
+    C-->>H: 转成 ToolMessage 交回模型
+```
+
+> 💡 这张图能解释三件常被问的事：**① 为什么每个 Server 要一条独立 Client 连接**；**② 工具清单为什么要缓存**（`tools/list` 每次往返都是延迟）；**③ 工具结果为什么要转成 `ToolMessage`**（模型只认消息）。
 
 ### 2.1 三大核心原语（Server 侧）
 
@@ -266,8 +293,7 @@ agent = create_agent(
 
 ---
 
-## 九、本章小结
-
+## 本章小结
 | 要点 | 说明 |
 |------|------|
 | 🎯 | MCP 统一了 Agent 与工具/数据源的连接，避免 N×M 适配 |
@@ -281,10 +307,15 @@ agent = create_agent(
 
 ## 📝 课后练习
 
-1. **入门**：写一个包含 2 个工具的 MCP Server，用 stdio 启动
-2. **接入**：用 `MultiServerMCPClient` 把本地 Server 接入 `create_agent`
-3. **远程**：把 Server 改为 Streamable HTTP 部署，并增加 OAuth 校验
-4. **对比**：实现同一工具（如查天气）的 MCP 版与自写 `@tool` 版，比较复用性
+**基础**
+
+1. 写一个包含 2 个工具的 MCP Server，用 stdio 启动
+
+**进阶**
+
+2. 用 `MultiServerMCPClient` 把本地 Server 接入 `create_agent`
+3. 把 Server 改为 Streamable HTTP 部署，并增加 OAuth 校验
+4. 实现同一工具（如查天气）的 MCP 版与自写 `@tool` 版，比较复用性
 
 ---
 

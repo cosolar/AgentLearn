@@ -1,7 +1,5 @@
 # 2.2 Chain 模式详解 —— LCEL、Runnable 协议与确定性工作流
 
-> 📅 更新至 2026-10 · 技术栈基线见 [教程大纲](../教程大纲.md)
-
 ## 📖 导读
 
 > **一句话结论**：Chain 是 LangChain 用 **LCEL（LangChain Expression Language）** 把多个组件用 `|` 串起来的**声明式工作流**；在 v1 中，**确定性流程用 LCEL，自主决策交给 `create_agent`**——二者分工明确，不是替代关系。

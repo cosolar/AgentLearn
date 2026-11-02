@@ -1,10 +1,8 @@
 # 9.8 实战：从零构建最小可行 Harness —— 一个真的能跑的 mini-harness
 
-> 📅 更新至 2026-10 · 技术栈基线见 [教程大纲](../教程大纲.md)
-
 ## 📖 导读
 
-> **最常见、也最致命的错误：在理解自己的失败模式之前就过度工程化。**
+> **一句话结论**：**最常见、也最致命的错误：在理解自己的失败模式之前就过度工程化。**
 
 [9.1](./01-什么是AgentHarness.md)–[9.7](./07-Harness工程方法论.md) 讲清了 Harness 的模块与方法论。本章我们**动手写一个最小可行 Harness（MVH, Minimum Viable Harness）**。
 
@@ -14,6 +12,14 @@
 > ```bash
 > cd examples/09-mini-harness && python smoke_test.py      # 输出：通过 19/19
 > ```
+
+- **前置阅读**：[9.1](./01-什么是AgentHarness.md) – [9.7](./07-Harness工程方法论.md)（本章是把理论压成 700 行代码）。
+- **本章你将学到**：
+  1. 七步构建：配置 → 权限 → 工具 → 压缩 → 验证 → 埋点 → 循环
+  2. 三重预算：轮数 / token / 时间
+  3. deny-first 权限与路径安全
+  4. 两段式压缩、验证门与背压
+  5. 用 `smoke_test.py` 做 19 项离线自检
 
 ---
 
@@ -607,8 +613,7 @@ python main.py "阅读工作区代码，让校验脚本通过"
 
 ---
 
-## 十一、本章总结
-
+## 本章小结
 | 要点 | 说明 |
 |------|------|
 | **先验证，后工程** | 四阶段顺序：验证 → 持久化 → 可观测 → 人在回路 |
@@ -624,7 +629,12 @@ python main.py "阅读工作区代码，让校验脚本通过"
 
 ## 📝 课后练习
 
-1. **跑通并破坏**：运行 `smoke_test.py`，然后把 `HarnessConfig.max_turns` 改成 3，观察终止原因与 trace 报告如何变化。
-2. **加一个工具**：给 `ToolRegistry` 新增 `git_diff`（只读），补齐 schema、加入 `READ_ONLY_TOOLS`，并写一条自检断言。
-3. **改造压缩**：把 `_mask_old_tool_outputs` 的"保留最近 6 条"改为**按 token 阈值**动态决定，并在自检中对比压缩前后的 token 数。
-4. **接入真实评测**：参考 [9.11](./11-评测与可观测性.md) 的 A/B 思路，用 `eval/tasks.jsonl` 对 `max_repeat_calls=1` 与 `=3` 两个配置做对比，输出完成率与平均 token 表——注意 `judge_success` 必须**程序化判定**。
+**基础**
+
+1. 运行 `smoke_test.py`，然后把 `HarnessConfig.max_turns` 改成 3，观察终止原因与 trace 报告如何变化。
+
+**进阶**
+
+2. 给 `ToolRegistry` 新增 `git_diff`（只读），补齐 schema、加入 `READ_ONLY_TOOLS`，并写一条自检断言。
+3. 把 `_mask_old_tool_outputs` 的"保留最近 6 条"改为**按 token 阈值**动态决定，并在自检中对比压缩前后的 token 数。
+4. 参考 [9.11](./11-评测与可观测性.md) 的 A/B 思路，用 `eval/tasks.jsonl` 对 `max_repeat_calls=1` 与 `=3` 两个配置做对比，输出完成率与平均 token 表——注意 `judge_success` 必须**程序化判定**。

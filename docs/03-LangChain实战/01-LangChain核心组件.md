@@ -1,8 +1,8 @@
 # 3.1 LangChain v1 核心组件 —— 框架全景、create_agent 与 Middleware
 
-> 📅 更新至 2026-10 · 技术栈基线见 [教程大纲](../教程大纲.md)
-
 ## 📖 导读
+
+> **一句话结论**：LangChain v1 不是“更花的 API”，而是把 Agent 拆成“一个入口 + 一组中间件”——你写的每一行，都在决定模型看到什么、能做什么。
 
 LangChain 是当前最流行的 LLM 应用开发框架，也是构建 AI Agent 最常用的基础设施。**它不是一个大而全的"黑盒"，而是一组精心设计的可组合模块。**
 
@@ -14,6 +14,14 @@ LangChain 是当前最流行的 LLM 应用开发框架，也是构建 AI Agent �
 > 本章将围绕这三条主线，带你建立对 LangChain v1 的完整认知。**记住一条铁律：v1 里创建 Agent 只有一个入口 —— `create_agent`。**
 
 **本节基线**：Python ≥ 3.12 · `uv` · `langchain>=1.4.5` · `langchain-core>=1.6.10` · `langgraph>=1.2.15`。
+
+- **前置阅读**：[2.3 Agent 核心架构](../02-核心概念/03-Agent核心架构.md)（先知道循环长什么样，再看框架怎么封装它）。
+- **本章你将学到**：
+  1. LangChain v1 的分层：哪些是底座（`langchain-core`），哪些是装配层
+  2. `create_agent` 的完整参数，以及它内部生成的那张图
+  3. **Middleware**：`before_model` / `wrap_model_call` / `wrap_tool_call` 的执行时机
+  4. 标准内容块（`content_blocks`）与多模态消息的统一表示
+  5. v0.x → v1 迁移对照：`AgentExecutor` 到底去哪了
 
 ---
 
@@ -511,7 +519,15 @@ async for chunk in agent.astream(
 
 ## 📝 课后练习
 
-1. **✅ 基础**：用 `create_agent` + 两个工具（搜索、计算）构建一个 Agent，并让它完成一个需要"先搜索、再计算"的多步任务。
-2. **💡 进阶**：为 Agent 加上 `SummarizationMiddleware(model=..., trigger={"tokens": 4000})`，构造一段长对话，观察上下文被压缩前后 `len(result["messages"])` 的变化。
-3. **🚀 挑战**：用 `response_format=ToolStrategy(Model)` 让 Agent 返回一个 Pydantic 结构（例如 `{title, summary, confidence}`），并读取 `result["structured_response"]`。
-4. **🔍 探索**：写一个自定义 `AgentMiddleware`，在 `before_model` 中动态注入当前时间；再对比用 `@before_model` 装饰器实现同一功能的代码差异。
+**基础**
+
+1. 用 `create_agent` + 两个工具（搜索、计算）构建一个 Agent，并让它完成一个需要"先搜索、再计算"的多步任务。
+
+**进阶**
+
+2. 为 Agent 加上 `SummarizationMiddleware(model=..., trigger={"tokens": 4000})`，构造一段长对话，观察上下文被压缩前后 `len(result["messages"])` 的变化。
+
+**挑战**
+
+3. 用 `response_format=ToolStrategy(Model)` 让 Agent 返回一个 Pydantic 结构（例如 `{title, summary, confidence}`），并读取 `result["structured_response"]`。
+4. 写一个自定义 `AgentMiddleware`，在 `before_model` 中动态注入当前时间；再对比用 `@before_model` 装饰器实现同一功能的代码差异。
